@@ -10,10 +10,11 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
 import Button from '../components/Button';
 import Input from '../components/Input';
+import SearchInput from '../components/SearchInput';
 import api from '../services/api';
+import { searchService } from '../services/searchService';
 import { RootStackParamList, Tema } from '../types';
 
 const styles = StyleSheet.create({
@@ -163,7 +164,7 @@ const TemasScreen: React.FC = () => {
   const navigation = useNavigation<TemasScreenNavigationProp>();
   const route = useRoute<TemasScreenRouteProp>();
   const { materiaId, materiaName } = route.params;
-  
+
   const [temas, setTemas] = useState<Tema[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -172,11 +173,12 @@ const TemasScreen: React.FC = () => {
   const [nome, setNome] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const loadTemas = useCallback(async () => {
+  //✅ NOVA FUNÇÃO DE BUSCA
+  const loadTemas = useCallback(async (query?: string) => {
     setLoading(true);
     try {
-      const response = await api.get<Tema[]>(`/temas/materia/${materiaId}`);
-      setTemas(response.data);
+      const response = await searchService.searchTemas(materiaId, query);
+      setTemas(response);
     } catch (error) {
       console.error('Erro ao carregar temas:', error);
       Alert.alert('Erro', 'Não foi possível carregar os temas');
@@ -191,6 +193,15 @@ const TemasScreen: React.FC = () => {
     setRefreshing(false);
   }, [loadTemas]);
 
+  //✅ HANDLERS DE BUSCA
+  const handleSearch = useCallback(async (query: string) => {
+    await loadTemas(query);
+  }, [loadTemas]);
+
+  const handleClearSearch = useCallback(async () => {
+    await loadTemas();
+  }, [loadTemas]);
+
   const handleCreateTema = useCallback(async () => {
     if (!nome.trim()) {
       Alert.alert('Erro', 'Nome do tema é obrigatório');
@@ -199,9 +210,9 @@ const TemasScreen: React.FC = () => {
 
     setSaving(true);
     try {
-      const response = await api.post<Tema>('/temas', { 
-        name: nome, 
-        materiaId 
+      const response = await api.post<Tema>('/temas', {
+        name: nome,
+        materiaId
       });
       setTemas(prev => [response.data, ...prev]);
       setNome('');
@@ -273,9 +284,9 @@ const TemasScreen: React.FC = () => {
   }, []);
 
   const openFlashcards = useCallback((tema: Tema) => {
-    navigation.navigate('Flashcards', { 
-      temaId: tema._id, 
-      temaName: tema.name 
+    navigation.navigate('Flashcards', {
+      temaId: tema._id,
+      temaName: tema.name
     });
   }, [navigation]);
 
@@ -283,8 +294,9 @@ const TemasScreen: React.FC = () => {
     setShowCreateForm(prev => !prev);
   }, []);
 
+  // useMemo para computações caras
   const isFormVisible = useMemo(() => {
-    return showCreateForm ?? editingTema !== null;
+    return showCreateForm || editingTema !== null;
   }, [showCreateForm, editingTema]);
 
   const formTitle = useMemo(() => {
@@ -300,7 +312,7 @@ const TemasScreen: React.FC = () => {
   }, [editingTema, handleEditTema, handleCreateTema]);
 
   const sortedTemas = useMemo(() => {
-    return [...temas].sort((a, b) => 
+    return [...temas].sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [temas]);
@@ -334,17 +346,20 @@ const TemasScreen: React.FC = () => {
         refreshControl={refreshControl}
         contentContainerStyle={styles.scrollContent}
       >
+        <SearchInput
+          placeholder="Buscar temas..."
+          onSearch={handleSearch}
+          onClear={handleClearSearch}
+        />
         {isFormVisible && (
           <View style={styles.formContainer}>
             <Text style={styles.formTitle}>{formTitle}</Text>
-            
             <Input
               label="Nome do Tema"
               value={nome}
               onChangeText={setNome}
               placeholder="Ex: Álgebra, Geometria..."
             />
-            
             <View style={styles.formButtons}>
               <Button
                 title={submitButtonTitle}
@@ -359,7 +374,6 @@ const TemasScreen: React.FC = () => {
             </View>
           </View>
         )}
-
         {sortedTemas.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyTitle}>🎯 Nenhum tema encontrado</Text>
@@ -381,7 +395,6 @@ const TemasScreen: React.FC = () => {
           </View>
         )}
       </ScrollView>
-
       {!isFormVisible && (
         <TouchableOpacity
           style={styles.fabButton}
@@ -416,12 +429,10 @@ const TemaCard = React.memo<TemaCardProps>(({ tema, onPress, onEdit, onDelete })
         <Text style={styles.temaName}>{tema.name}</Text>
         <Text style={styles.temaDate}>{formattedDate}</Text>
       </View>
-      
       <View style={styles.temaActions}>
         <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
           <Text style={styles.actionButtonText}>✏️ Editar</Text>
         </TouchableOpacity>
-        
         <TouchableOpacity
           style={[styles.actionButton, styles.deleteButton]}
           onPress={handleDelete}

@@ -10,10 +10,11 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
 import Button from '../components/Button';
 import Input from '../components/Input';
+import SearchInput from '../components/SearchInput';
 import api from '../services/api';
+import { searchService } from '../services/searchService';
 import { RootStackParamList, Flashcard } from '../types';
 
 
@@ -213,6 +214,7 @@ const styles = StyleSheet.create({
   },
 });
 
+
 type FlashcardsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Flashcards'>;
 type FlashcardsScreenRouteProp = RouteProp<RootStackParamList, 'Flashcards'>;
 
@@ -220,7 +222,7 @@ const FlashcardsScreen: React.FC = () => {
   const navigation = useNavigation<FlashcardsScreenNavigationProp>();
   const route = useRoute<FlashcardsScreenRouteProp>();
   const { temaId, temaName } = route.params;
-  
+
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -230,11 +232,11 @@ const FlashcardsScreen: React.FC = () => {
   const [answer, setAnswer] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const loadFlashcards = useCallback(async () => {
+  const loadFlashcards = useCallback(async (query?: string) => {
     setLoading(true);
     try {
-      const response = await api.get<Flashcard[]>(`/flashcards/tema/${temaId}`);
-      setFlashcards(response.data);
+      const response = await searchService.searchFlashcards(temaId, query);
+      setFlashcards(response);
     } catch (error) {
       console.error('Erro ao carregar flashcards:', error);
       Alert.alert('Erro', 'Não foi possível carregar os flashcards');
@@ -249,6 +251,14 @@ const FlashcardsScreen: React.FC = () => {
     setRefreshing(false);
   }, [loadFlashcards]);
 
+  const handleSearch = useCallback(async (query: string) => {
+    await loadFlashcards(query);
+  }, [loadFlashcards]);
+
+  const handleClearSearch = useCallback(async () => {
+    await loadFlashcards();
+  }, [loadFlashcards]);
+
   const handleCreateFlashcard = useCallback(async () => {
     if (!question.trim() || !answer.trim()) {
       Alert.alert('Erro', 'Pergunta e resposta são obrigatórias');
@@ -257,10 +267,10 @@ const FlashcardsScreen: React.FC = () => {
 
     setSaving(true);
     try {
-      const response = await api.post<Flashcard>('/flashcards', { 
-        question, 
+      const response = await api.post<Flashcard>('/flashcards', {
+        question,
         answer,
-        temaId 
+        temaId
       });
       setFlashcards(prev => [response.data, ...prev]);
       setQuestion('');
@@ -283,9 +293,9 @@ const FlashcardsScreen: React.FC = () => {
 
     setSaving(true);
     try {
-      const response = await api.put<Flashcard>(`/flashcards/${editingFlashcard._id}`, { 
-        question, 
-        answer 
+      const response = await api.put<Flashcard>(`/flashcards/${editingFlashcard._id}`, {
+        question,
+        answer
       });
       setFlashcards(prev => prev.map(f => f._id === editingFlashcard._id ? response.data : f));
       setQuestion('');
@@ -343,10 +353,9 @@ const FlashcardsScreen: React.FC = () => {
       Alert.alert('Aviso', 'Crie alguns flashcards antes de começar a estudar!');
       return;
     }
-    
-    navigation.navigate('Estudo', { 
-      temaId, 
-      temaName 
+    navigation.navigate('Estudo', {
+      temaId,
+      temaName
     });
   }, [navigation, temaId, temaName, flashcards.length]);
 
@@ -371,7 +380,7 @@ const FlashcardsScreen: React.FC = () => {
   }, [editingFlashcard, handleEditFlashcard, handleCreateFlashcard]);
 
   const sortedFlashcards = useMemo(() => {
-    return [...flashcards].sort((a, b) => 
+    return [...flashcards].sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [flashcards]);
@@ -401,7 +410,7 @@ const FlashcardsScreen: React.FC = () => {
             {flashcards.length} {flashcards.length === 1 ? 'flashcard' : 'flashcards'}
           </Text>
           {flashcards.length > 0 && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.studyButton}
               onPress={startStudy}
             >
@@ -415,10 +424,14 @@ const FlashcardsScreen: React.FC = () => {
         refreshControl={refreshControl}
         contentContainerStyle={styles.scrollContent}
       >
+        <SearchInput
+          placeholder="Buscar por pergunta..."
+          onSearch={handleSearch}
+          onClear={handleClearSearch}
+        />
         {isFormVisible && (
           <View style={styles.formContainer}>
             <Text style={styles.formTitle}>{formTitle}</Text>
-            
             <Input
               label="Pergunta"
               value={question}
@@ -427,7 +440,6 @@ const FlashcardsScreen: React.FC = () => {
               multiline
               numberOfLines={3}
             />
-
             <Input
               label="Resposta"
               value={answer}
@@ -436,7 +448,6 @@ const FlashcardsScreen: React.FC = () => {
               multiline
               numberOfLines={4}
             />
-            
             <View style={styles.formButtons}>
               <Button
                 title={submitButtonTitle}
@@ -523,12 +534,11 @@ const FlashcardCard = React.memo<FlashcardCardProps>(({ flashcard, onEdit, onDel
           {showAnswer ? 'Toque para ocultar resposta' : 'Toque para ver resposta'}
         </Text>
       </TouchableOpacity>
-      
+
       <View style={styles.flashcardActions}>
         <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
           <Text style={styles.actionButtonText}>✏️ Editar</Text>
         </TouchableOpacity>
-        
         <TouchableOpacity
           style={[styles.actionButton, styles.deleteButton]}
           onPress={handleDelete}
