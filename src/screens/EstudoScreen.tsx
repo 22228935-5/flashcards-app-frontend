@@ -233,7 +233,6 @@ const EstudoScreen: React.FC = () => {
     return studyStats.correct + studyStats.incorrect + studyStats.skipped;
   }, [studyStats]);
 
-  // ✅ CALCULAR SCORE AUTOMATICAMENTE
   const finalScore = useMemo(() => {
     const total = studyStats.correct + studyStats.incorrect + studyStats.skipped;
     if (total === 0) return 0;
@@ -287,7 +286,6 @@ const EstudoScreen: React.FC = () => {
         setCurrentIndex(prev => prev + 1);
         setShowAnswer(false);
     } else {
-        // ✅ FINAL DO ESTUDO - ESCOLHER DIFICULDADE
         const stats = finalStats || studyStats;
         const score = Math.round((stats.correct / flashcards.length) * 100);
         
