@@ -8,16 +8,10 @@ import { View, Text } from 'react-native';
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import MateriasScreen from './src/screens/MateriasScreen';
+import TemasScreen from './src/screens/TemasScreen';
 import { RootStackParamList } from './src/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-const TemasPlaceholder = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text style={{ fontSize: 18, color: '#666' }}>🎯 Tela de Temas</Text>
-    <Text style={{ fontSize: 14, color: '#999', marginTop: 8 }}>Em desenvolvimento...</Text>
-  </View>
-);
 
 const FlashcardsPlaceholder = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -99,7 +93,7 @@ const App: React.FC = () => {
           />
           <Stack.Screen
             name="Temas"
-            component={TemasPlaceholder}
+            component={TemasScreen}
             options={({ route }) => ({
               title: `🎯 ${route.params?.materiaName || 'Temas'}`,
             })}
