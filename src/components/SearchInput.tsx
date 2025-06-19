@@ -1,5 +1,13 @@
-import React, { useState, useCallback } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
+
+interface SearchInputProps {
+  placeholder: string;
+  onSearch: (query: string) => void;
+  onClear?: () => void;
+  debounceDelay?: number;
+  minCharacters?: number;
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -11,6 +19,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e0e0e0',
     marginBottom: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   icon: {
     fontSize: 16,
@@ -25,40 +44,70 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 4,
+    marginLeft: 4,
   },
   clearButtonText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 18,
+    color: '#999',
+    fontWeight: 'bold',
   },
 });
 
-interface SearchInputProps {
-  placeholder: string;
-  onSearch: (query: string) => void;
-  onClear: () => void;
-}
-
-const SearchInput: React.FC<SearchInputProps> = ({ placeholder, onSearch, onClear }) => {
+const SearchInput: React.FC<SearchInputProps> = ({ 
+  placeholder, 
+  onSearch, 
+  onClear,
+  debounceDelay = 300,
+  minCharacters = 1
+}) => {
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const isFirstRender = useRef(true);
+  const hasUserInteracted = useRef(false);
 
-  const handleSearch = useCallback(() => {
-    onSearch(query.trim());
-  }, [query, onSearch]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, debounceDelay);
+
+    return () => clearTimeout(timer);
+  }, [query, debounceDelay]);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    if (!hasUserInteracted.current) {
+      return;
+    }
+
+    const trimmedQuery = debouncedQuery.trim();
+    
+    if (trimmedQuery.length === 0 || trimmedQuery.length >= minCharacters) {
+      onSearch(trimmedQuery);
+    }
+  }, [debouncedQuery, onSearch, minCharacters]);
 
   const handleClear = useCallback(() => {
+    hasUserInteracted.current = true;
     setQuery('');
-    onClear();
-  }, [onClear]);
+    setDebouncedQuery('');
+    onSearch('');
+    onClear?.();
+  }, [onSearch, onClear]);
 
   const handleChangeText = useCallback((text: string) => {
+    hasUserInteracted.current = true;
     setQuery(text);
-    // Busca em tempo real conforme digita
-    if (text.trim().length === 0) {
-      onClear();
-    } else if (text.trim().length >= 2) {
-      onSearch(text.trim());
-    }
-  }, [onSearch, onClear]);
+  }, []);
+
+  const handleSubmitEditing = useCallback(() => {
+    hasUserInteracted.current = true;
+    const trimmedQuery = query.trim();
+    onSearch(trimmedQuery);
+  }, [query, onSearch]);
 
   return (
     <View style={styles.container}>
@@ -68,8 +117,10 @@ const SearchInput: React.FC<SearchInputProps> = ({ placeholder, onSearch, onClea
         placeholder={placeholder}
         value={query}
         onChangeText={handleChangeText}
-        onSubmitEditing={handleSearch}
+        onSubmitEditing={handleSubmitEditing}
         returnKeyType="search"
+        autoCapitalize="none"
+        autoCorrect={false}
       />
       {query.length > 0 && (
         <TouchableOpacity style={styles.clearButton} onPress={handleClear}>
