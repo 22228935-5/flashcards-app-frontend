@@ -231,6 +231,7 @@ const FlashcardsScreen: React.FC = () => {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [saving, setSaving] = useState(false);
+  const [currentSearchQuery, setCurrentSearchQuery] = useState('');
 
   const loadFlashcards = useCallback(async (query?: string) => {
     setLoading(true);
@@ -247,15 +248,27 @@ const FlashcardsScreen: React.FC = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    setCurrentSearchQuery('');
     await loadFlashcards();
     setRefreshing(false);
   }, [loadFlashcards]);
 
   const handleSearch = useCallback(async (query: string) => {
-    await loadFlashcards(query);
-  }, [loadFlashcards]);
+    setCurrentSearchQuery(query);
+    setLoading(true);
+    try {
+      const response = await searchService.searchFlashcards(temaId, query);
+      setFlashcards(response);
+    } catch (error) {
+      console.error('Erro ao buscar flashcards:', error);
+      Alert.alert('Erro', 'Não foi possível buscar os flashcards');
+    } finally {
+      setLoading(false);
+    }
+  }, [temaId]);
 
   const handleClearSearch = useCallback(async () => {
+    setCurrentSearchQuery('');
     await loadFlashcards();
   }, [loadFlashcards]);
 
@@ -393,7 +406,7 @@ const FlashcardsScreen: React.FC = () => {
     loadFlashcards();
   }, [loadFlashcards]);
 
-  if (loading && flashcards.length === 0) {
+  if (loading && flashcards.length === 0 && !currentSearchQuery) {
     return (
       <View style={styles.loadingContainer}>
         <Text>Carregando flashcards...</Text>
@@ -428,6 +441,8 @@ const FlashcardsScreen: React.FC = () => {
           placeholder="Buscar por pergunta..."
           onSearch={handleSearch}
           onClear={handleClearSearch}
+          debounceDelay={300}
+          minCharacters={2}
         />
         {isFormVisible && (
           <View style={styles.formContainer}>
@@ -464,9 +479,13 @@ const FlashcardsScreen: React.FC = () => {
         )}
         {sortedFlashcards.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>📝 Nenhum flashcard encontrado</Text>
+            <Text style={styles.emptyTitle}>
+              {currentSearchQuery ? '🔍 Nenhum flashcard encontrado' : '📝 Nenhum flashcard cadastrado'}
+            </Text>
             <Text style={styles.emptyDescription}>
-              Crie o primeiro flashcard para começar a estudar {temaName}!
+              {currentSearchQuery 
+                ? `Não encontramos flashcards com "${currentSearchQuery}"`
+                : `Crie o primeiro flashcard para começar a estudar ${temaName}!`}
             </Text>
           </View>
         ) : (

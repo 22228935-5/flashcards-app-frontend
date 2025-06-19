@@ -69,6 +69,7 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 22,
+    paddingHorizontal: 20,
   },
   listContainer: {
     gap: 12,
@@ -142,7 +143,6 @@ const styles = StyleSheet.create({
   },
 });
 
-
 type MateriasScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Materias'>;
 
 const MateriasScreen: React.FC = () => {
@@ -155,6 +155,7 @@ const MateriasScreen: React.FC = () => {
   const [editingMateria, setEditingMateria] = useState<Materia | null>(null);
   const [nome, setNome] = useState('');
   const [saving, setSaving] = useState(false);
+  const [currentSearchQuery, setCurrentSearchQuery] = useState('');
 
   const loadMaterias = useCallback(async (query?: string) => {
     setLoading(true);
@@ -176,10 +177,21 @@ const MateriasScreen: React.FC = () => {
   }, [loadMaterias]);
 
   const handleSearch = useCallback(async (query: string) => {
-    await loadMaterias(query);
-  }, [loadMaterias]);
+    setCurrentSearchQuery(query); // Salva a query atual
+    setLoading(true);
+    try {
+      const response = await searchService.searchMaterias(query);
+      setMaterias(response);
+    } catch (error) {
+      console.error('Erro ao buscar matérias:', error);
+      Alert.alert('Erro', 'Não foi possível buscar as matérias');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const handleClearSearch = useCallback(async () => {
+    setCurrentSearchQuery(''); // Limpa a query salva
     await loadMaterias();
   }, [loadMaterias]);
 
@@ -302,7 +314,7 @@ const MateriasScreen: React.FC = () => {
     loadMaterias();
   }, [loadMaterias]);
 
-  if (loading && materias.length === 0) {
+  if (loading && materias.length === 0 && !currentSearchQuery) {
     return (
       <View style={styles.loadingContainer}>
         <Text>Carregando matérias...</Text>
@@ -320,7 +332,10 @@ const MateriasScreen: React.FC = () => {
           placeholder="Buscar matérias..."
           onSearch={handleSearch}
           onClear={handleClearSearch}
+          debounceDelay={300}
+          minCharacters={2}
         />
+        
         {isFormVisible && (
           <View style={styles.formContainer}>
             <Text style={styles.formTitle}>{formTitle}</Text>
@@ -346,11 +361,16 @@ const MateriasScreen: React.FC = () => {
             </View>
           </View>
         )}
+        
         {sortedMaterias.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>📚 Nenhuma matéria encontrada</Text>
+            <Text style={styles.emptyTitle}>
+              {currentSearchQuery ? '🔍 Nenhuma matéria encontrada' : '📚 Nenhuma matéria cadastrada'}
+            </Text>
             <Text style={styles.emptyDescription}>
-              Crie sua primeira matéria para começar a organizar seus estudos!
+              {currentSearchQuery 
+                ? `Não encontramos matérias com "${currentSearchQuery}"`
+                : 'Crie sua primeira matéria para começar a organizar seus estudos!'}
             </Text>
           </View>
         ) : (
@@ -367,6 +387,7 @@ const MateriasScreen: React.FC = () => {
           </View>
         )}
       </ScrollView>
+      
       {!isFormVisible && (
         <TouchableOpacity
           style={styles.fabButton}

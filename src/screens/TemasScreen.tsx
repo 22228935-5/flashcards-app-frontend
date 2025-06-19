@@ -172,8 +172,8 @@ const TemasScreen: React.FC = () => {
   const [editingTema, setEditingTema] = useState<Tema | null>(null);
   const [nome, setNome] = useState('');
   const [saving, setSaving] = useState(false);
+  const [currentSearchQuery, setCurrentSearchQuery] = useState('');
 
-  //✅ NOVA FUNÇÃO DE BUSCA
   const loadTemas = useCallback(async (query?: string) => {
     setLoading(true);
     try {
@@ -189,16 +189,27 @@ const TemasScreen: React.FC = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    setCurrentSearchQuery('');
     await loadTemas();
     setRefreshing(false);
   }, [loadTemas]);
 
-  //✅ HANDLERS DE BUSCA
   const handleSearch = useCallback(async (query: string) => {
-    await loadTemas(query);
-  }, [loadTemas]);
+    setCurrentSearchQuery(query);
+    setLoading(true);
+    try {
+      const response = await searchService.searchTemas(materiaId, query);
+      setTemas(response);
+    } catch (error) {
+      console.error('Erro ao buscar temas:', error);
+      Alert.alert('Erro', 'Não foi possível buscar os temas');
+    } finally {
+      setLoading(false);
+    }
+  }, [materiaId]);
 
   const handleClearSearch = useCallback(async () => {
+    setCurrentSearchQuery('');
     await loadTemas();
   }, [loadTemas]);
 
@@ -294,7 +305,6 @@ const TemasScreen: React.FC = () => {
     setShowCreateForm(prev => !prev);
   }, []);
 
-  // useMemo para computações caras
   const isFormVisible = useMemo(() => {
     return showCreateForm || editingTema !== null;
   }, [showCreateForm, editingTema]);
@@ -325,7 +335,7 @@ const TemasScreen: React.FC = () => {
     loadTemas();
   }, [loadTemas]);
 
-  if (loading && temas.length === 0) {
+  if (loading && temas.length === 0 && !currentSearchQuery) {
     return (
       <View style={styles.loadingContainer}>
         <Text>Carregando temas...</Text>
@@ -350,6 +360,8 @@ const TemasScreen: React.FC = () => {
           placeholder="Buscar temas..."
           onSearch={handleSearch}
           onClear={handleClearSearch}
+          debounceDelay={300}
+          minCharacters={2}
         />
         {isFormVisible && (
           <View style={styles.formContainer}>
@@ -376,9 +388,13 @@ const TemasScreen: React.FC = () => {
         )}
         {sortedTemas.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>🎯 Nenhum tema encontrado</Text>
+            <Text style={styles.emptyTitle}>
+              {currentSearchQuery ? '🔍 Nenhum tema encontrado' : '🎯 Nenhum tema cadastrado'}
+            </Text>
             <Text style={styles.emptyDescription}>
-              Crie o primeiro tema para organizar seus flashcards de {materiaName}!
+              {currentSearchQuery 
+                ? `Não encontramos temas com "${currentSearchQuery}"`
+                : `Crie o primeiro tema para organizar seus flashcards de ${materiaName}!`}
             </Text>
           </View>
         ) : (
