@@ -187,7 +187,7 @@ const EstudoScreen: React.FC = () => {
   const route = useRoute<EstudoScreenRouteProp>();
   const { temaId, temaName } = route.params;
   
-  const [flashcards, setFlashcards] = useState<FlashcardPopulated[]>([]); // ✅ Usar FlashcardPopulated
+  const [flashcards, setFlashcards] = useState<FlashcardPopulated[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -233,42 +233,99 @@ const EstudoScreen: React.FC = () => {
     return studyStats.correct + studyStats.incorrect + studyStats.skipped;
   }, [studyStats]);
 
+  // ✅ CALCULAR SCORE AUTOMATICAMENTE
+  const finalScore = useMemo(() => {
+    const total = studyStats.correct + studyStats.incorrect + studyStats.skipped;
+    if (total === 0) return 0;
+    return Math.round((studyStats.correct / total) * 100);
+  }, [studyStats]);
+
   const handleShowAnswer = useCallback(() => {
     setShowAnswer(true);
   }, []);
 
-  const nextFlashcard = useCallback((finalStats?: { correct: number; incorrect: number; skipped: number }) => {
+    const markThemeAsReviewed = useCallback(async (
+        difficulty: 'facil' | 'medio' | 'dificil', 
+        finalStats: { correct: number; incorrect: number; skipped: number }
+    ) => {
+    try {
+        const total = flashcards.length;
+        const correctAnswers = finalStats.correct;
+        const score = Math.round((correctAnswers / total) * 100);
+        
+        await api.put(`/temas/review/${temaId}`, {
+        difficulty,
+        score,
+        totalQuestions: total,
+        correctAnswers
+        });
+        
+        const intervals = { facil: 7, medio: 3, dificil: 1 };
+        const days = intervals[difficulty];
+        
+        Alert.alert(
+        'Tema Revisado! 🎉',
+        `Sua performance: ${score}%\n\n` +
+        `✅ Acertou: ${correctAnswers}/${total}\n` +
+        `🔄 Próxima revisão: ${days} dia${days > 1 ? 's' : ''}`,
+        [
+            {
+            text: 'Continuar',
+            onPress: () => navigation.goBack()
+            }
+        ]
+        );
+    } catch (error) {
+        console.error('Erro ao marcar tema como revisado:', error);
+        Alert.alert('Erro', 'Não foi possível salvar a revisão do tema');
+        navigation.goBack();
+    }
+    }, [temaId, flashcards.length, navigation]); 
+
+    const nextFlashcard = useCallback((finalStats?: { correct: number; incorrect: number; skipped: number }) => {
     if (currentIndex < flashcards.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-      setShowAnswer(false);
+        setCurrentIndex(prev => prev + 1);
+        setShowAnswer(false);
     } else {
-      const stats = finalStats || studyStats;
-      Alert.alert(
+        // ✅ FINAL DO ESTUDO - ESCOLHER DIFICULDADE
+        const stats = finalStats || studyStats;
+        const score = Math.round((stats.correct / flashcards.length) * 100);
+        
+        Alert.alert(
         'Estudo Concluído! 🎉',
-        `Você estudou ${flashcards.length} flashcards!\n\n` +
+        `Performance: ${score}%\n\n` +
         `✅ Acertou: ${stats.correct}\n` +
         `❌ Errou: ${stats.incorrect}\n` +
-        `⏭️ Pulou: ${stats.skipped}`,
+        `⏭️ Pulou: ${stats.skipped}\n\n` +
+        `Como foi estudar este tema?`,
         [
-          {
+            {
+            text: '🟢 Fácil (revisar em 7 dias)',
+            onPress: () => markThemeAsReviewed('facil', stats)
+            },
+            {
+            text: '🟡 Médio (revisar em 3 dias)',
+            onPress: () => markThemeAsReviewed('medio', stats)
+            },
+            {
+            text: '🔴 Difícil (revisar amanhã)',
+            onPress: () => markThemeAsReviewed('dificil', stats)
+            },
+            {
             text: 'Estudar Novamente',
+            style: 'cancel',
             onPress: () => {
-              setCurrentIndex(0);
-              setShowAnswer(false);
-              setStudyStats({ correct: 0, incorrect: 0, skipped: 0 });
-              const shuffled = [...flashcards].sort(() => Math.random() - 0.5);
-              setFlashcards(shuffled);
+                setCurrentIndex(0);
+                setShowAnswer(false);
+                setStudyStats({ correct: 0, incorrect: 0, skipped: 0 });
+                const shuffled = [...flashcards].sort(() => Math.random() - 0.5);
+                setFlashcards(shuffled);
             }
-          },
-          {
-            text: 'Finalizar',
-            style: 'default',
-            onPress: () => navigation.goBack()
-          }
+            }
         ]
-      );
+        );
     }
-  }, [currentIndex, flashcards, studyStats, navigation]);
+    }, [currentIndex, flashcards, studyStats, markThemeAsReviewed]);
 
   const markCorrect = useCallback(async () => {
     const newStats = { ...studyStats, correct: studyStats.correct + 1 };
@@ -391,6 +448,8 @@ const EstudoScreen: React.FC = () => {
           <View style={styles.statsContainer}>
             <Text style={styles.statsText}>
               ✅ {studyStats.correct} • ❌ {studyStats.incorrect} • ⏭️ {studyStats.skipped}
+              {/* ✅ MOSTRAR SCORE EM TEMPO REAL */}
+              {totalAnswered > 0 && ` • 📊 ${finalScore}%`}
             </Text>
           </View>
         )}
