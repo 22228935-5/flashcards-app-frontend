@@ -13,7 +13,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/Button';
 import Input from '../components/Input';
+import SearchInput from '../components/SearchInput';
 import api from '../services/api';
+import { searchService } from '../services/searchService';
 import { RootStackParamList, Materia } from '../types';
 
 const styles = StyleSheet.create({
@@ -140,6 +142,7 @@ const styles = StyleSheet.create({
   },
 });
 
+
 type MateriasScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Materias'>;
 
 const MateriasScreen: React.FC = () => {
@@ -153,11 +156,11 @@ const MateriasScreen: React.FC = () => {
   const [nome, setNome] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const loadMaterias = useCallback(async () => {
+  const loadMaterias = useCallback(async (query?: string) => {
     setLoading(true);
     try {
-      const response = await api.get<Materia[]>('/materias');
-      setMaterias(response.data);
+      const response = await searchService.searchMaterias(query);
+      setMaterias(response);
     } catch (error) {
       console.error('Erro ao carregar matérias:', error);
       Alert.alert('Erro', 'Não foi possível carregar as matérias');
@@ -170,6 +173,14 @@ const MateriasScreen: React.FC = () => {
     setRefreshing(true);
     await loadMaterias();
     setRefreshing(false);
+  }, [loadMaterias]);
+
+  const handleSearch = useCallback(async (query: string) => {
+    await loadMaterias(query);
+  }, [loadMaterias]);
+
+  const handleClearSearch = useCallback(async () => {
+    await loadMaterias();
   }, [loadMaterias]);
 
   const handleCreateMateria = useCallback(async () => {
@@ -262,7 +273,7 @@ const MateriasScreen: React.FC = () => {
   }, []);
 
   const isFormVisible = useMemo(() => {
-    return showCreateForm ?? editingMateria !== null;
+    return showCreateForm || editingMateria !== null;
   }, [showCreateForm, editingMateria]);
 
   const formTitle = useMemo(() => {
@@ -305,6 +316,11 @@ const MateriasScreen: React.FC = () => {
         refreshControl={refreshControl}
         contentContainerStyle={styles.scrollContent}
       >
+        <SearchInput
+          placeholder="Buscar matérias..."
+          onSearch={handleSearch}
+          onClear={handleClearSearch}
+        />
         {isFormVisible && (
           <View style={styles.formContainer}>
             <Text style={styles.formTitle}>{formTitle}</Text>
@@ -330,7 +346,6 @@ const MateriasScreen: React.FC = () => {
             </View>
           </View>
         )}
-
         {sortedMaterias.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyTitle}>📚 Nenhuma matéria encontrada</Text>
@@ -352,7 +367,6 @@ const MateriasScreen: React.FC = () => {
           </View>
         )}
       </ScrollView>
-
       {!isFormVisible && (
         <TouchableOpacity
           style={styles.fabButton}
@@ -378,11 +392,7 @@ const MateriaCard = React.memo<MateriaCardProps>(({ materia, onPress, onEdit, on
   const handleDelete = useCallback(() => onDelete(materia), [onDelete, materia]);
 
   const formattedDate = useMemo(() => {
-    return new Date(materia.createdAt).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+    return new Date(materia.createdAt).toLocaleDateString('pt-BR');
   }, [materia.createdAt]);
 
   return (
