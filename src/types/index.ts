@@ -44,3 +44,39 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
+
+export interface StudyStats {
+  total: number;
+  correct: number;
+  incorrect: number;
+  skipped: number;
+  accuracy: number;
+}
+
+export interface ContentStats {
+  materias: number;
+  temas: number;
+  flashcards: number;
+}
+
+export interface GeneralStats {
+  content: ContentStats;
+  studies: StudyStats;
+}
+
+export interface MateriaStats {
+  content: {
+    temas: number;
+    flashcards: number;
+  };
+  studies: StudyStats;
+  lastStudied: string | null;
+}
+
+export interface TemaStats {
+  content: {
+    flashcards: number;
+  };
+  studies: StudyStats;
+  lastStudied: string | null;
+}
