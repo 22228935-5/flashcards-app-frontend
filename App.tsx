@@ -9,16 +9,10 @@ import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import MateriasScreen from './src/screens/MateriasScreen';
 import TemasScreen from './src/screens/TemasScreen';
+import FlashcardsScreen from './src/screens/FlashcardsScreen';
 import { RootStackParamList } from './src/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-const FlashcardsPlaceholder = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text style={{ fontSize: 18, color: '#666' }}>📝 Tela de Flashcards</Text>
-    <Text style={{ fontSize: 14, color: '#999', marginTop: 8 }}>Em desenvolvimento...</Text>
-  </View>
-);
 
 const EstudoPlaceholder = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -100,7 +94,7 @@ const App: React.FC = () => {
           />
           <Stack.Screen
             name="Flashcards"
-            component={FlashcardsPlaceholder}
+            component={FlashcardsScreen}
             options={({ route }) => ({
               title: `📝 ${route.params?.temaName || 'Flashcards'}`,
             })}
