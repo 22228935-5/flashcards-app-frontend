@@ -10,16 +10,10 @@ import HomeScreen from './src/screens/HomeScreen';
 import MateriasScreen from './src/screens/MateriasScreen';
 import TemasScreen from './src/screens/TemasScreen';
 import FlashcardsScreen from './src/screens/FlashcardsScreen';
+import EstudoScreen from './src/screens/EstudoScreen';
 import { RootStackParamList } from './src/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-const EstudoPlaceholder = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text style={{ fontSize: 18, color: '#666' }}>🧠 Tela de Estudo</Text>
-    <Text style={{ fontSize: 14, color: '#999', marginTop: 8 }}>Em desenvolvimento...</Text>
-  </View>
-);
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
@@ -41,9 +35,21 @@ const App: React.FC = () => {
   if (isLoggedIn === null) {
     return (
       <SafeAreaProvider>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' }}>
-          <Text style={{ fontSize: 18, color: '#666' }}>📚 Flashcards</Text>
-          <Text style={{ fontSize: 14, color: '#999', marginTop: 8 }}>Carregando...</Text>
+        <View style={{ 
+          flex: 1, 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          backgroundColor: '#f5f5f5' 
+        }}>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#007AFF', marginBottom: 8 }}>
+            📚 Flashcards
+          </Text>
+          <Text style={{ fontSize: 16, color: '#666' }}>
+            Sistema de Estudos com Repetição Espaçada
+          </Text>
+          <Text style={{ fontSize: 14, color: '#999', marginTop: 16 }}>
+            Carregando...
+          </Text>
         </View>
       </SafeAreaProvider>
     );
@@ -101,9 +107,12 @@ const App: React.FC = () => {
           />
           <Stack.Screen
             name="Estudo"
-            component={EstudoPlaceholder}
+            component={EstudoScreen}
             options={({ route }) => ({
-              title: `🧠 ${route.params?.temaName || 'Estudo'}`,
+              title: `🧠 Estudando: ${route.params?.temaName || 'Flashcards'}`,
+              headerStyle: {
+                backgroundColor: '#4CAF50',
+              },
             })}
           />
         </Stack.Navigator>
