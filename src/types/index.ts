@@ -39,6 +39,23 @@ export interface Flashcard {
   updatedAt: string;
 }
 
+export interface FlashcardPopulated {
+  _id: string;
+  question: string;
+  answer: string;
+  temaId: {
+    _id: string;
+    name: string;
+    materiaId: {
+      _id: string;
+      name: string;
+      userId: string;
+    };
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuthResponse {
   message: string;
   token: string;

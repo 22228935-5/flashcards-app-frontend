@@ -12,15 +12,15 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/Button';
 import api from '../services/api';
-import { RootStackParamList, Flashcard } from '../types';
-
+import { statsService } from '../services/statsService';
+import { RootStackParamList, FlashcardPopulated } from '../types';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  loadingContainer: {
+  loadingContainer: {  
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -187,7 +187,7 @@ const EstudoScreen: React.FC = () => {
   const route = useRoute<EstudoScreenRouteProp>();
   const { temaId, temaName } = route.params;
   
-  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
+  const [flashcards, setFlashcards] = useState<FlashcardPopulated[]>([]); // ✅ Usar FlashcardPopulated
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -200,7 +200,7 @@ const EstudoScreen: React.FC = () => {
   const loadFlashcards = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get<Flashcard[]>(`/flashcards/tema/${temaId}`);
+      const response = await api.get<FlashcardPopulated[]>(`/flashcards/tema/${temaId}`);
       if (response.data.length === 0) {
         Alert.alert(
           'Nenhum flashcard',
@@ -238,70 +238,103 @@ const EstudoScreen: React.FC = () => {
   }, []);
 
   const nextFlashcard = useCallback((finalStats?: { correct: number; incorrect: number; skipped: number }) => {
-  if (currentIndex < flashcards.length - 1) {
-    setCurrentIndex(prev => prev + 1);
-    setShowAnswer(false);
-  } else {
-    const stats = finalStats || studyStats;
-    Alert.alert(
-      'Estudo Concluído! 🎉',
-      `Você estudou ${flashcards.length} flashcards!\n\n` +
-      `✅ Acertou: ${stats.correct}\n` +
-      `❌ Errou: ${stats.incorrect}\n` +
-      `⏭️ Pulou: ${stats.skipped}`,
-      [
-        {
-          text: 'Estudar Novamente',
-          onPress: () => {
-            setCurrentIndex(0);
-            setShowAnswer(false);
-            setStudyStats({ correct: 0, incorrect: 0, skipped: 0 });
-            const shuffled = [...flashcards].sort(() => Math.random() - 0.5);
-            setFlashcards(shuffled);
+    if (currentIndex < flashcards.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setShowAnswer(false);
+    } else {
+      const stats = finalStats || studyStats;
+      Alert.alert(
+        'Estudo Concluído! 🎉',
+        `Você estudou ${flashcards.length} flashcards!\n\n` +
+        `✅ Acertou: ${stats.correct}\n` +
+        `❌ Errou: ${stats.incorrect}\n` +
+        `⏭️ Pulou: ${stats.skipped}`,
+        [
+          {
+            text: 'Estudar Novamente',
+            onPress: () => {
+              setCurrentIndex(0);
+              setShowAnswer(false);
+              setStudyStats({ correct: 0, incorrect: 0, skipped: 0 });
+              const shuffled = [...flashcards].sort(() => Math.random() - 0.5);
+              setFlashcards(shuffled);
+            }
+          },
+          {
+            text: 'Finalizar',
+            style: 'default',
+            onPress: () => navigation.goBack()
           }
-        },
-        {
-          text: 'Finalizar',
-          style: 'default',
-          onPress: () => navigation.goBack()
-        }
-      ]
-    );
-  }
-}, [currentIndex, flashcards, studyStats, navigation]);
+        ]
+      );
+    }
+  }, [currentIndex, flashcards, studyStats, navigation]);
 
-const markCorrect = useCallback(() => {
-  const newStats = { ...studyStats, correct: studyStats.correct + 1 };
-  setStudyStats(newStats);
-  
-  if (currentIndex === flashcards.length - 1) {
-    nextFlashcard(newStats);
-  } else {
-    nextFlashcard();
-  }
-}, [studyStats, currentIndex, flashcards.length, nextFlashcard]);
+  const markCorrect = useCallback(async () => {
+    const newStats = { ...studyStats, correct: studyStats.correct + 1 };
+    setStudyStats(newStats);
+    
+    try {
+      await statsService.saveStudyResult({
+        materiaId: currentFlashcard.temaId.materiaId._id,
+        temaId: currentFlashcard.temaId._id,
+        flashcardId: currentFlashcard._id,
+        result: 'correct'
+      });
+    } catch (error) {
+      console.error('Erro ao salvar estatística:', error);
+    }
+    
+    if (currentIndex === flashcards.length - 1) {
+      nextFlashcard(newStats);
+    } else {
+      nextFlashcard();
+    }
+  }, [studyStats, currentIndex, flashcards.length, nextFlashcard, currentFlashcard]);
 
-const markIncorrect = useCallback(() => {
-  const newStats = { ...studyStats, incorrect: studyStats.incorrect + 1 };
-  setStudyStats(newStats);
-  
-  if (currentIndex === flashcards.length - 1) {
-    nextFlashcard(newStats);
-  } else {
-    nextFlashcard();
-  }
-}, [studyStats, currentIndex, flashcards.length, nextFlashcard]);
+  const markIncorrect = useCallback(async () => {
+    const newStats = { ...studyStats, incorrect: studyStats.incorrect + 1 };
+    setStudyStats(newStats);
+    
+    try {
+      await statsService.saveStudyResult({
+        materiaId: currentFlashcard.temaId.materiaId._id,
+        temaId: currentFlashcard.temaId._id,
+        flashcardId: currentFlashcard._id,
+        result: 'incorrect'
+      });
+    } catch (error) {
+      console.error('Erro ao salvar estatística:', error);
+    }
+    
+    if (currentIndex === flashcards.length - 1) {
+      nextFlashcard(newStats);
+    } else {
+      nextFlashcard();
+    }
+  }, [studyStats, currentIndex, flashcards.length, nextFlashcard, currentFlashcard]);
 
-const skipCard = useCallback(() => {
-  const newStats = { ...studyStats, skipped: studyStats.skipped + 1 };
-  setStudyStats(newStats);
-  
-  if (currentIndex === flashcards.length - 1) {
-    nextFlashcard(newStats);
-  } else {
-    nextFlashcard();
-  }
-}, [studyStats, currentIndex, flashcards.length, nextFlashcard]);
+  const skipCard = useCallback(async () => {
+    const newStats = { ...studyStats, skipped: studyStats.skipped + 1 };
+    setStudyStats(newStats);
+    
+    try {
+      await statsService.saveStudyResult({
+        materiaId: currentFlashcard.temaId.materiaId._id,
+        temaId: currentFlashcard.temaId._id,
+        flashcardId: currentFlashcard._id,
+        result: 'skipped'
+      });
+    } catch (error) {
+      console.error('Erro ao salvar estatística:', error);
+    }
+    
+    if (currentIndex === flashcards.length - 1) {
+      nextFlashcard(newStats);
+    } else {
+      nextFlashcard();
+    }
+  }, [studyStats, currentIndex, flashcards.length, nextFlashcard, currentFlashcard]);
 
   const restartStudy = useCallback(() => {
     Alert.alert(
@@ -384,6 +417,7 @@ const skipCard = useCallback(() => {
           )}
         </View>
       </View>
+
       <View style={styles.actionsContainer}>
         {!showAnswer ? (
           <View style={styles.actionRow}>

@@ -7,12 +7,12 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/Button';
-import { RootStackParamList, User } from '../types';
-
+import { RootStackParamList, User, GeneralStats } from '../types';
+import { statsService } from '../services/statsService';
 
 const styles = StyleSheet.create({
   container: {
@@ -55,6 +55,55 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 16,
   },
+  loadingText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+  noStatsText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    paddingVertical: 20,
+    fontStyle: 'italic',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  studyStats: {
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  studyStatsText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  studyStatsDetail: {
+    fontSize: 12,
+    color: '#666',
+  },
 });
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -62,6 +111,8 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'H
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const [user, setUser] = useState<User | null>(null);
+  const [stats, setStats] = useState<GeneralStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   const loadUser = useCallback(async () => {
     try {
@@ -71,6 +122,18 @@ const HomeScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Erro ao carregar usuário:', error);
+    }
+  }, []);
+
+  const loadStats = useCallback(async () => {
+    setLoadingStats(true);
+    try {
+      const generalStats = await statsService.getGeneralStats();
+      setStats(generalStats);
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    } finally {
+      setLoadingStats(false);
     }
   }, []);
 
@@ -120,27 +183,65 @@ const HomeScreen: React.FC = () => {
       buttonTitle: 'Ver Matérias',
       onPress: navigateToMaterias,
       variant: 'primary' as const,
-    },
-    {
-      id: 'estatisticas',
-      title: '📊 Estatísticas',
-      description: 'Acompanhe seu progresso nos estudos',
-      buttonTitle: 'Em breve',
-      onPress: showFeatureNotReady,
-      variant: 'secondary' as const,
-    },
-  ], [navigateToMaterias, showFeatureNotReady]);
+    }
+  ], [navigateToMaterias]);
 
   useEffect(() => {
     loadUser();
   }, [loadUser]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        loadStats();
+      }
+    }, [user, loadStats])
+  );
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>{welcomeText}</Text>
         <Text style={styles.subtitle}>O que vamos estudar hoje?</Text>
-
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📊 Estatísticas Gerais</Text>
+          {loadingStats ? (
+            <Text style={styles.loadingText}>Carregando...</Text>
+          ) : stats ? (
+            <View>
+              <View style={styles.statsGrid}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{stats.content.materias}</Text>
+                  <Text style={styles.statLabel}>📚 Matérias</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{stats.content.temas}</Text>
+                  <Text style={styles.statLabel}>🎯 Temas</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{stats.content.flashcards}</Text>
+                  <Text style={styles.statLabel}>📝 Flashcards</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{stats.studies.accuracy}%</Text>
+                  <Text style={styles.statLabel}>✅ Acerto</Text>
+                </View>
+              </View>
+              {stats.studies.total > 0 && (
+                <View style={styles.studyStats}>
+                  <Text style={styles.studyStatsText}>
+                    🧠 {stats.studies.total} Questões respondidas
+                  </Text>
+                  <Text style={styles.studyStatsDetail}>
+                    ✅ {stats.studies.correct} • ❌ {stats.studies.incorrect} • ⏭️ {stats.studies.skipped}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            <Text style={styles.noStatsText}>Faça seu primeiro estudo para ver estatísticas!</Text>
+          )}
+        </View>
         {cardData.map((card) => (
           <HomeCard
             key={card.id}
