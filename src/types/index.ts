@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Temas: { materiaId: string; materiaName: string };
   Flashcards: { temaId: string; temaName: string };
   Estudo: { temaId: string; temaName: string };
+  Dashboard: undefined;
 };
 
 export interface User {
@@ -26,6 +27,10 @@ export interface Tema {
   _id: string;
   name: string;
   materiaId: string;
+  nextReview?: string;
+  reviewCount?: number;
+  lastDifficulty?: 'facil' | 'medio' | 'dificil';
+  lastReviewScore?: number;
   createdAt: string;
   updatedAt: string;
 }

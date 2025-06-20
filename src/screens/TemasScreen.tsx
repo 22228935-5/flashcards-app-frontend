@@ -8,7 +8,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -38,10 +38,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  // ✅ NOVOS ESTILOS PARA HEADER
+  headerInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
   headerSubtitle: {
     fontSize: 14,
     color: '#666',
-    marginTop: 4,
+  },
+  reviewBadge: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  reviewBadgeText: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '600',
   },
   scrollContent: {
     padding: 16,
@@ -88,6 +105,13 @@ const styles = StyleSheet.create({
   listContainer: {
     gap: 12,
   },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 8,
+    marginBottom: 8,
+  },
   temaCard: {
     backgroundColor: '#fff',
     padding: 16,
@@ -97,32 +121,75 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    position: 'relative',
+  },
+  readyForReviewCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+    backgroundColor: '#f8fff8',
+  },
+  reviewBadgeCard: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  reviewBadgeCardText: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: '600',
   },
   temaHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   temaName: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
     flex: 1,
+    paddingRight: 60,
   },
   temaDate: {
     fontSize: 12,
     color: '#666',
   },
+  reviewInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  reviewStatus: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  lastScore: {
+    fontSize: 12,
+    color: '#666',
+  },
   temaActions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
+    flexWrap: 'wrap',
   },
   actionButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
     backgroundColor: '#f0f0f0',
+  },
+  studyButton: {
+    backgroundColor: '#4CAF50',
+  },
+  studyButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   deleteButton: {
     backgroundColor: '#ffe6e6',
@@ -301,6 +368,13 @@ const TemasScreen: React.FC = () => {
     });
   }, [navigation]);
 
+  const startStudy = useCallback((tema: Tema) => {
+    navigation.navigate('Estudo', {
+      temaId: tema._id,
+      temaName: tema.name
+    });
+  }, [navigation]);
+
   const toggleCreateForm = useCallback(() => {
     setShowCreateForm(prev => !prev);
   }, []);
@@ -327,13 +401,31 @@ const TemasScreen: React.FC = () => {
     );
   }, [temas]);
 
+  const { temasParaRevisar, temaspendentes } = useMemo(() => {
+    const now = new Date();
+    const prontos: Tema[] = [];
+    const pendentes: Tema[] = [];
+    
+    sortedTemas.forEach(tema => {
+      if (tema.nextReview && new Date(tema.nextReview) <= now) {
+        prontos.push(tema);
+      } else {
+        pendentes.push(tema);
+      }
+    });
+    
+    return { temasParaRevisar: prontos, temaspendentes: pendentes };
+  }, [sortedTemas]);
+
   const refreshControl = useMemo(() => (
     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
   ), [refreshing, onRefresh]);
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     loadTemas();
-  }, [loadTemas]);
+  }, [loadTemas])
+);
 
   if (loading && temas.length === 0 && !currentSearchQuery) {
     return (
@@ -347,9 +439,18 @@ const TemasScreen: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>📚 {materiaName}</Text>
-        <Text style={styles.headerSubtitle}>
-          {temas.length} {temas.length === 1 ? 'tema' : 'temas'}
-        </Text>
+        <View style={styles.headerInfo}>
+          <Text style={styles.headerSubtitle}>
+            {temas.length} {temas.length === 1 ? 'tema' : 'temas'}
+          </Text>
+          {temasParaRevisar.length > 0 && (
+            <View style={styles.reviewBadge}>
+              <Text style={styles.reviewBadgeText}>
+                🔔 {temasParaRevisar.length} para revisar
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <ScrollView
@@ -363,6 +464,7 @@ const TemasScreen: React.FC = () => {
           debounceDelay={300}
           minCharacters={2}
         />
+
         {isFormVisible && (
           <View style={styles.formContainer}>
             <Text style={styles.formTitle}>{formTitle}</Text>
@@ -386,6 +488,7 @@ const TemasScreen: React.FC = () => {
             </View>
           </View>
         )}
+
         {sortedTemas.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyTitle}>
@@ -399,18 +502,42 @@ const TemasScreen: React.FC = () => {
           </View>
         ) : (
           <View style={styles.listContainer}>
-            {sortedTemas.map((tema) => (
+            {temasParaRevisar.length > 0 && !currentSearchQuery && (
+              <>
+                <Text style={styles.sectionTitle}>🔔 Prontos para Revisar</Text>
+                {temasParaRevisar.map((tema) => (
+                  <TemaCard
+                    key={tema._id}
+                    tema={tema}
+                    onPress={openFlashcards}
+                    onEdit={startEdit}
+                    onDelete={handleDeleteTema}
+                    onStudy={startStudy}
+                    isReadyForReview={true}
+                  />
+                ))}
+              </>
+            )}
+
+            {temaspendentes.length > 0 && !currentSearchQuery && temasParaRevisar.length > 0 && (
+              <Text style={styles.sectionTitle}>📚 Outros Temas</Text>
+            )}
+            
+            {(currentSearchQuery ? sortedTemas : temaspendentes).map((tema) => (
               <TemaCard
                 key={tema._id}
                 tema={tema}
                 onPress={openFlashcards}
                 onEdit={startEdit}
                 onDelete={handleDeleteTema}
+                onStudy={startStudy}
+                isReadyForReview={false}
               />
             ))}
           </View>
         )}
       </ScrollView>
+
       {!isFormVisible && (
         <TouchableOpacity
           style={styles.fabButton}
@@ -428,27 +555,92 @@ interface TemaCardProps {
   onPress: (tema: Tema) => void;
   onEdit: (tema: Tema) => void;
   onDelete: (tema: Tema) => void;
+  onStudy: (tema: Tema) => void;
+  isReadyForReview: boolean;
 }
 
-const TemaCard = React.memo<TemaCardProps>(({ tema, onPress, onEdit, onDelete }) => {
+const TemaCard = React.memo<TemaCardProps>(({ 
+  tema, 
+  onPress, 
+  onEdit, 
+  onDelete, 
+  onStudy,
+  isReadyForReview 
+}) => {
   const handlePress = useCallback(() => onPress(tema), [onPress, tema]);
   const handleEdit = useCallback(() => onEdit(tema), [onEdit, tema]);
   const handleDelete = useCallback(() => onDelete(tema), [onDelete, tema]);
+  const handleStudy = useCallback(() => onStudy(tema), [onStudy, tema]);
 
   const formattedDate = useMemo(() => {
     return new Date(tema.createdAt).toLocaleDateString('pt-BR');
   }, [tema.createdAt]);
 
+  const reviewInfo = useMemo(() => {
+    if (!tema.nextReview) {
+      return { status: 'Nunca estudado', color: '#999', showStudyButton: true };
+    }
+
+    const nextReview = new Date(tema.nextReview);
+    const now = new Date();
+    const diffTime = nextReview.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) {
+      return { status: 'Pronto para revisar!', color: '#4CAF50', showStudyButton: true };
+    } else if (diffDays === 1) {
+      return { status: 'Revisar amanhã', color: '#FF9800', showStudyButton: false };
+    } else {
+      return { status: `Revisar em ${diffDays} dias`, color: '#666', showStudyButton: false };
+    }
+  }, [tema.nextReview]);
+
   return (
-    <TouchableOpacity style={styles.temaCard} onPress={handlePress}>
+    <TouchableOpacity 
+      style={[
+        styles.temaCard,
+        isReadyForReview && styles.readyForReviewCard
+      ]} 
+      onPress={handlePress}
+    >
+      {isReadyForReview && (
+        <View style={styles.reviewBadgeCard}>
+          <Text style={styles.reviewBadgeCardText}>🔔 REVISAR</Text>
+        </View>
+      )}
+
       <View style={styles.temaHeader}>
         <Text style={styles.temaName}>{tema.name}</Text>
         <Text style={styles.temaDate}>{formattedDate}</Text>
       </View>
+
+      <View style={styles.reviewInfo}>
+        <Text style={[styles.reviewStatus, { color: reviewInfo.color }]}>
+          {reviewInfo.status}
+        </Text>
+        {tema.lastReviewScore !== undefined && (
+          <Text style={styles.lastScore}>
+            📊 Última: {tema.lastReviewScore}%
+          </Text>
+        )}
+      </View>
+
       <View style={styles.temaActions}>
+        {reviewInfo.showStudyButton && (
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.studyButton]} 
+            onPress={handleStudy}
+          >
+            <Text style={[styles.actionButtonText, styles.studyButtonText]}>
+              🧠 Estudar
+            </Text>
+          </TouchableOpacity>
+        )}
+        
         <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
           <Text style={styles.actionButtonText}>✏️ Editar</Text>
         </TouchableOpacity>
+        
         <TouchableOpacity
           style={[styles.actionButton, styles.deleteButton]}
           onPress={handleDelete}

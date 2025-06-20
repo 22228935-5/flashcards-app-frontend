@@ -11,6 +11,7 @@ import MateriasScreen from './src/screens/MateriasScreen';
 import TemasScreen from './src/screens/TemasScreen';
 import FlashcardsScreen from './src/screens/FlashcardsScreen';
 import EstudoScreen from './src/screens/EstudoScreen';
+import DashboardScreen from './src/screens/DashboardScreen';
 import { RootStackParamList } from './src/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -114,6 +115,16 @@ const App: React.FC = () => {
                 backgroundColor: '#4CAF50',
               },
             })}
+          />
+          <Stack.Screen
+            name="Dashboard"
+            component={DashboardScreen}
+            options={{
+              title: '📊 Dashboard',
+              headerStyle: {
+                backgroundColor: '#2196F3',
+              },
+            }}
           />
         </Stack.Navigator>
       </NavigationContainer>

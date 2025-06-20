@@ -5,14 +5,16 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/Button';
-import { RootStackParamList, User, GeneralStats } from '../types';
+import { RootStackParamList, User, GeneralStats, Materia } from '../types';
 import { statsService } from '../services/statsService';
+import api from '../services/api';
 
 const styles = StyleSheet.create({
   container: {
@@ -43,6 +45,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  reviewCard: {
+    backgroundColor: '#f8fff8',
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+  urgentReviewCard: {
+    backgroundColor: '#fff8f0',
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9800',
   },
   cardTitle: {
     fontSize: 18,
@@ -104,15 +116,73 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
+  // ✅ ESTILOS PARA REVISÕES
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  reviewBadge: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  urgentReviewBadge: {
+    backgroundColor: '#FF9800',
+  },
+  reviewBadgeText: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  reviewList: {
+    marginBottom: 12,
+  },
+  reviewMateriaItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  reviewMateriaName: {
+    fontSize: 14,
+    color: '#333',
+    flex: 1,
+  },
+  reviewMateriaCount: {
+    fontSize: 12,
+    color: '#666',
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  reviewButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
 });
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+
+interface ReviewCounts {
+  totalTemas: number;
+  materiasCounts: Array<{
+    materia: Materia;
+    count: number;
+  }>;
+}
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<GeneralStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  // ✅ ESTADO PARA REVISÕES
+  const [reviewCounts, setReviewCounts] = useState<ReviewCounts>({ totalTemas: 0, materiasCounts: [] });
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   const loadUser = useCallback(async () => {
     try {
@@ -134,6 +204,42 @@ const HomeScreen: React.FC = () => {
       console.error('Erro ao carregar estatísticas:', error);
     } finally {
       setLoadingStats(false);
+    }
+  }, []);
+
+  const loadReviewCounts = useCallback(async () => {
+    setLoadingReviews(true);
+    try {
+      const materiasResponse = await api.get<Materia[]>('/materias');
+      const materias = materiasResponse.data;
+
+      const countsPromises = materias.map(async (materia) => {
+        try {
+          const response = await api.get(`/temas/due-count/${materia._id}`);
+          return {
+            materia,
+            count: response.data.count || 0
+          };
+        } catch (error) {
+          console.error(`Erro ao buscar contagem para ${materia.name}:`, error);
+          return {
+            materia,
+            count: 0
+          };
+        }
+      });
+
+      const materiasCounts = await Promise.all(countsPromises);
+      const totalTemas = materiasCounts.reduce((sum, item) => sum + item.count, 0);
+
+      setReviewCounts({
+        totalTemas,
+        materiasCounts: materiasCounts.filter(item => item.count > 0)
+      });
+    } catch (error) {
+      console.error('Erro ao carregar contadores de revisão:', error);
+    } finally {
+      setLoadingReviews(false);
     }
   }, []);
 
@@ -167,13 +273,49 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('Materias');
   }, [navigation]);
 
-  const showFeatureNotReady = useCallback(() => {
-    Alert.alert('Em desenvolvimento', 'Esta funcionalidade será implementada em breve!');
-  }, []);
+  // ✅ NAVEGAÇÃO PARA DASHBOARD
+  const navigateToDashboard = useCallback(() => {
+    navigation.navigate('Dashboard');
+  }, [navigation]);
+
+  const handleQuickReview = useCallback(() => {
+    if (reviewCounts.materiasCounts.length > 0) {
+      const firstMateria = reviewCounts.materiasCounts[0].materia;
+      navigation.navigate('Temas', {
+        materiaId: firstMateria._id,
+        materiaName: firstMateria.name
+      });
+    }
+  }, [reviewCounts.materiasCounts, navigation]);
+
+const handleChooseReview = useCallback(() => {
+  const options = reviewCounts.materiasCounts.map(item => ({
+    text: `${item.materia.name} (${item.count} temas)`,
+    onPress: () => navigation.navigate('Temas', {
+      materiaId: item.materia._id,
+      materiaName: item.materia.name
+    })
+  }));
+
+  options.push({ 
+    text: 'Cancelar', 
+    onPress: () => {},
+  });
+
+  Alert.alert(
+    'Escolher Matéria',
+    'Qual matéria deseja revisar?',
+    options
+  );
+}, [reviewCounts.materiasCounts, navigation]);
 
   const welcomeText = useMemo(() => {
     return `Olá, ${user?.name || 'Usuário'}! 👋`;
   }, [user?.name]);
+
+  const isUrgentReview = useMemo(() => {
+    return reviewCounts.totalTemas >= 5;
+  }, [reviewCounts.totalTemas]);
 
   const cardData = useMemo(() => [
     {
@@ -183,8 +325,16 @@ const HomeScreen: React.FC = () => {
       buttonTitle: 'Ver Matérias',
       onPress: navigateToMaterias,
       variant: 'primary' as const,
+    },
+    {
+      id: 'dashboard',
+      title: '📊 Dashboard',
+      description: 'Acompanhe seu progresso e estatísticas detalhadas',
+      buttonTitle: 'Ver Dashboard',
+      onPress: navigateToDashboard,
+      variant: 'secondary' as const,
     }
-  ], [navigateToMaterias]);
+  ], [navigateToMaterias, navigateToDashboard]);
 
   useEffect(() => {
     loadUser();
@@ -194,8 +344,9 @@ const HomeScreen: React.FC = () => {
     useCallback(() => {
       if (user) {
         loadStats();
+        loadReviewCounts();
       }
-    }, [user, loadStats])
+    }, [user, loadStats, loadReviewCounts])
   );
 
   return (
@@ -203,6 +354,61 @@ const HomeScreen: React.FC = () => {
       <View style={styles.content}>
         <Text style={styles.title}>{welcomeText}</Text>
         <Text style={styles.subtitle}>O que vamos estudar hoje?</Text>
+        
+        {/* ✅ CARD DE REVISÕES */}
+        {reviewCounts.totalTemas > 0 && (
+          <View style={[styles.card, isUrgentReview ? styles.urgentReviewCard : styles.reviewCard]}>
+            <View style={styles.reviewHeader}>
+              <Text style={styles.cardTitle}>
+                {isUrgentReview ? '🔥 Revisões Urgentes!' : '🔔 Temas para Revisar'}
+              </Text>
+              <View style={[styles.reviewBadge, isUrgentReview && styles.urgentReviewBadge]}>
+                <Text style={styles.reviewBadgeText}>
+                  {reviewCounts.totalTemas} {reviewCounts.totalTemas === 1 ? 'tema' : 'temas'}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.cardDescription}>
+              {isUrgentReview 
+                ? 'Você tem muitos temas acumulados para revisar!' 
+                : 'Ótimo momento para reforçar seu aprendizado!'
+              }
+            </Text>
+            {reviewCounts.materiasCounts.length > 0 && (
+              <View style={styles.reviewList}>
+                {reviewCounts.materiasCounts.slice(0, 3).map((item) => (
+                  <View key={item.materia._id} style={styles.reviewMateriaItem}>
+                    <Text style={styles.reviewMateriaName}>📚 {item.materia.name}</Text>
+                    <Text style={styles.reviewMateriaCount}>
+                      {item.count} {item.count === 1 ? 'tema' : 'temas'}
+                    </Text>
+                  </View>
+                ))}
+                {reviewCounts.materiasCounts.length > 3 && (
+                  <Text style={styles.cardDescription}>
+                    +{reviewCounts.materiasCounts.length - 3} outras matérias...
+                  </Text>
+                )}
+              </View>
+            )}
+            <View style={styles.reviewButtons}>
+              <Button
+                title="🚀 Revisar Agora"
+                onPress={handleQuickReview}
+                variant="primary"
+              />
+              {reviewCounts.materiasCounts.length > 1 && (
+                <Button
+                  title="📋 Escolher"
+                  onPress={handleChooseReview}
+                  variant="secondary"
+                />
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* ✅ ESTATÍSTICAS GERAIS */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>📊 Estatísticas Gerais</Text>
           {loadingStats ? (
@@ -242,6 +448,8 @@ const HomeScreen: React.FC = () => {
             <Text style={styles.noStatsText}>Faça seu primeiro estudo para ver estatísticas!</Text>
           )}
         </View>
+
+        {/* ✅ CARDS DE NAVEGAÇÃO - COM DASHBOARD */}
         {cardData.map((card) => (
           <HomeCard
             key={card.id}
@@ -276,9 +484,9 @@ const HomeCard = React.memo<HomeCardProps>(({
   description, 
   buttonTitle, 
   onPress, 
-  variant 
+  variant,
 }) => (
-  <View style={styles.card}>
+  <View style={[styles.card]}>
     <Text style={styles.cardTitle}>{title}</Text>
     <Text style={styles.cardDescription}>{description}</Text>
     <Button

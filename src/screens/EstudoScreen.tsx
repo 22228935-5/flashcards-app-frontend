@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/Button';
@@ -411,9 +411,11 @@ const EstudoScreen: React.FC = () => {
     );
   }, [flashcards]);
 
-  useEffect(() => {
-    loadFlashcards();
-  }, [loadFlashcards]);
+  useFocusEffect(
+    useCallback(() => {
+      loadFlashcards();
+    }, [loadFlashcards])
+  );
 
   if (loading) {
     return (

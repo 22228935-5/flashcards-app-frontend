@@ -8,7 +8,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/Button';
@@ -310,9 +310,11 @@ const MateriasScreen: React.FC = () => {
     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
   ), [refreshing, onRefresh]);
 
-  useEffect(() => {
-    loadMaterias();
-  }, [loadMaterias]);
+  useFocusEffect(
+    useCallback(() => {
+      loadMaterias();
+    }, [loadMaterias])
+  );
 
   if (loading && materias.length === 0 && !currentSearchQuery) {
     return (
