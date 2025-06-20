@@ -116,7 +116,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
-  // ✅ ESTILOS PARA REVISÕES
   reviewHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -180,7 +179,6 @@ const HomeScreen: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<GeneralStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
-  // ✅ ESTADO PARA REVISÕES
   const [reviewCounts, setReviewCounts] = useState<ReviewCounts>({ totalTemas: 0, materiasCounts: [] });
   const [loadingReviews, setLoadingReviews] = useState(false);
 
@@ -273,7 +271,6 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('Materias');
   }, [navigation]);
 
-  // ✅ NAVEGAÇÃO PARA DASHBOARD
   const navigateToDashboard = useCallback(() => {
     navigation.navigate('Dashboard');
   }, [navigation]);

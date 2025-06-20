@@ -38,7 +38,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-  // ✅ NOVOS ESTILOS PARA HEADER
   headerInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',

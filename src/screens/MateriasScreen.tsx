@@ -177,7 +177,7 @@ const MateriasScreen: React.FC = () => {
   }, [loadMaterias]);
 
   const handleSearch = useCallback(async (query: string) => {
-    setCurrentSearchQuery(query); // Salva a query atual
+    setCurrentSearchQuery(query);
     setLoading(true);
     try {
       const response = await searchService.searchMaterias(query);
@@ -191,7 +191,7 @@ const MateriasScreen: React.FC = () => {
   }, []);
 
   const handleClearSearch = useCallback(async () => {
-    setCurrentSearchQuery(''); // Limpa a query salva
+    setCurrentSearchQuery('');
     await loadMaterias();
   }, [loadMaterias]);
 
