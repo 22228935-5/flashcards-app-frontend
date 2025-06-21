@@ -1,16 +1,5 @@
 import React from 'react';
-import { TextInput, Text, View, StyleSheet } from 'react-native';
-
-interface InputProps {
-  label: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder?: string;
-  secureTextEntry?: boolean;
-  error?: string;
-  multiline?: boolean;
-  numberOfLines?: number;
-}
+import { TextInput, Text, View, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
@@ -44,34 +33,86 @@ const styles = StyleSheet.create({
   },
 });
 
-const Input: React.FC<InputProps> = ({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  secureTextEntry = false,
-  error,
-  multiline = false,
-  numberOfLines = 1,
-}) => {
+interface InputProps {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  secureTextEntry?: boolean;
+  error?: string;
+  multiline?: boolean;
+  numberOfLines?: number;
+}
+
+interface InputState {
+  hasError: boolean;
+  isMultiline: boolean;
+  isSecure: boolean;
+  numberOfLines: number;
+}
+
+const createInputState = (props: InputProps): InputState => ({
+  hasError: Boolean(props.error),
+  isMultiline: props.multiline ?? false,
+  isSecure: props.secureTextEntry ?? false,
+  numberOfLines: props.numberOfLines ?? 1
+});
+
+const hasErrorState = (state: InputState): boolean => 
+  state.hasError;
+
+const isMultilineInput = (state: InputState): boolean => 
+  state.isMultiline;
+
+const calculateInputStyles = (state: InputState): ViewStyle[] => {
+  const baseStyles: ViewStyle[] = [styles.input];
+  
+  if (isMultilineInput(state)) {
+    baseStyles.push(styles.inputMultiline);
+  }
+  
+  if (hasErrorState(state)) {
+    baseStyles.push(styles.inputError);
+  }
+  
+  return baseStyles;
+};
+
+const getTextAlignVertical = (state: InputState): 'auto' | 'top' | 'bottom' | 'center' => 
+  isMultilineInput(state) ? 'top' : 'center';
+
+const renderLabel = (text: string) => (
+  <Text style={styles.label}>{text}</Text>
+);
+
+const renderErrorMessage = (error: string) => (
+  <Text style={styles.errorText}>{error}</Text>
+);
+
+const renderTextInput = (props: InputProps, state: InputState) => (
+  <TextInput
+    style={calculateInputStyles(state)}
+    value={props.value}
+    onChangeText={props.onChangeText}
+    placeholder={props.placeholder}
+    secureTextEntry={state.isSecure}
+    multiline={state.isMultiline}
+    numberOfLines={state.numberOfLines}
+    textAlignVertical={getTextAlignVertical(state)}
+  />
+);
+
+const shouldRenderError = (error: string | undefined): error is string => 
+  Boolean(error);
+
+const Input: React.FC<InputProps> = (props) => {
+  const state = createInputState(props);
+  
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={[
-          styles.input,
-          multiline && styles.inputMultiline,
-          error && styles.inputError
-        ]}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        secureTextEntry={secureTextEntry}
-        multiline={multiline}
-        numberOfLines={numberOfLines}
-        textAlignVertical={multiline ? 'top' : 'center'}
-      />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {renderLabel(props.label)}
+      {renderTextInput(props, state)}
+      {shouldRenderError(props.error) && renderErrorMessage(props.error)}
     </View>
   );
 };

@@ -53,61 +53,106 @@ const styles = StyleSheet.create({
   },
 });
 
-const SearchInput: React.FC<SearchInputProps> = ({ 
-  placeholder, 
-  onSearch, 
+const SearchInput: React.FC<SearchInputProps> = ({
+  placeholder,
+  onSearch,
   onClear,
   debounceDelay = 300,
   minCharacters = 1
 }) => {
   const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
-  const isFirstRender = useRef(true);
-  const hasUserInteracted = useRef(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isFirstRenderRef = useRef(true);
 
+  // Limpa o timer ao desmontar o componente
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(query);
-    }, debounceDelay);
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
-    return () => clearTimeout(timer);
-  }, [query, debounceDelay]);
-
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    if (!hasUserInteracted.current) {
-      return;
-    }
-
-    const trimmedQuery = debouncedQuery.trim();
+  // Função para executar a busca
+  const executeSearch = useCallback((searchQuery: string) => {
+    const trimmedQuery = searchQuery.trim();
     
+    // Só executa se o usuário já interagiu e não é o primeiro render
+    if (!hasUserInteracted || isFirstRenderRef.current) {
+      return;
+    }
+
+    // Verifica se deve executar a busca baseado no tamanho mínimo
     if (trimmedQuery.length === 0 || trimmedQuery.length >= minCharacters) {
       onSearch(trimmedQuery);
     }
-  }, [debouncedQuery, onSearch, minCharacters]);
+  }, [hasUserInteracted, minCharacters, onSearch]);
 
-  const handleClear = useCallback(() => {
-    hasUserInteracted.current = true;
-    setQuery('');
-    setDebouncedQuery('');
-    onSearch('');
-    onClear?.();
-  }, [onSearch, onClear]);
+  // Efeito para lidar com mudanças no query com debounce
+  useEffect(() => {
+    // Marca que não é mais o primeiro render
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+
+    // Limpa o timer anterior
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Cria novo timer
+    debounceTimerRef.current = setTimeout(() => {
+      executeSearch(query);
+    }, debounceDelay);
+
+    // Cleanup
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [query, debounceDelay, executeSearch]);
 
   const handleChangeText = useCallback((text: string) => {
-    hasUserInteracted.current = true;
+    if (!hasUserInteracted) {
+      setHasUserInteracted(true);
+    }
     setQuery(text);
-  }, []);
+  }, [hasUserInteracted]);
 
   const handleSubmitEditing = useCallback(() => {
-    hasUserInteracted.current = true;
+    if (!hasUserInteracted) {
+      setHasUserInteracted(true);
+    }
+    
+    // Limpa o timer de debounce
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Executa a busca imediatamente
     const trimmedQuery = query.trim();
-    onSearch(trimmedQuery);
-  }, [query, onSearch]);
+    if (trimmedQuery.length === 0 || trimmedQuery.length >= minCharacters) {
+      onSearch(trimmedQuery);
+    }
+  }, [query, minCharacters, onSearch, hasUserInteracted]);
+
+  const handleClear = useCallback(() => {
+    if (!hasUserInteracted) {
+      setHasUserInteracted(true);
+    }
+    
+    // Limpa o timer de debounce
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    setQuery('');
+    onSearch('');
+    onClear?.();
+  }, [onSearch, onClear, hasUserInteracted]);
 
   return (
     <View style={styles.container}>

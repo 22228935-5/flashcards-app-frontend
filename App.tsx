@@ -5,14 +5,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text } from 'react-native';
 
-import LoginScreen from './src/screens/LoginScreen';
-import HomeScreen from './src/screens/HomeScreen';
-import MateriasScreen from './src/screens/MateriasScreen';
-import TemasScreen from './src/screens/TemasScreen';
-import FlashcardsScreen from './src/screens/FlashcardsScreen';
-import EstudoScreen from './src/screens/EstudoScreen';
+import LoginScreen from './src/screens/login/page/LoginScreen';
+import HomeScreen from './src/screens/home/page/HomeScreen';
+import MateriasScreen from './src/screens/materias/page/MateriasScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import { RootStackParamList } from './src/types';
+import TemasScreen from './src/screens/temas/page/TemasScreen';
+import EstudoScreen from './src/screens/estudo/page/EstudoScreen';
+import FlashcardsScreen from './src/screens/flashcards/page/FlashcardsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
