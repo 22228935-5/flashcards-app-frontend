@@ -1,22 +1,27 @@
-import api from './api';
+import { materiaService } from './materiaService';
+import { flashcardService } from './flashcardService';
 import { Materia, Tema, Flashcard } from '../types';
+import { temaService } from './temasService';
 
 export const searchService = {
   searchMaterias: async (query?: string): Promise<Materia[]> => {
-    const params = query ? { q: query } : {};
-    const response = await api.get<Materia[]>('/search/materias', { params });
-    return response.data;
+    return materiaService.searchMaterias(query);
   },
 
   searchTemas: async (materiaId: string, query?: string): Promise<Tema[]> => {
-    const params = { materiaId, ...(query && { q: query }) };
-    const response = await api.get<Tema[]>('/search/temas', { params });
-    return response.data;
+    return temaService.searchTemas(materiaId, query);
   },
 
   searchFlashcards: async (temaId: string, query?: string): Promise<Flashcard[]> => {
-    const params = { temaId, ...(query && { q: query }) };
-    const response = await api.get<Flashcard[]>('/search/flashcards', { params });
-    return response.data;
+    return flashcardService.searchFlashcards(temaId, query);
+  },
+
+  searchAll: async (query: string): Promise<{
+    materias: Materia[];
+    temas: Tema[];
+    flashcards: Flashcard[];
+  }> => {
+    throw new Error('Busca global ainda não implementada');
   }
 };
+
