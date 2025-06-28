@@ -92,7 +92,6 @@ const FlashcardsScreen: React.FC = () => {
 
   useEffect(() => {
     loadFlashcards();
-     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (showLoadingState) {

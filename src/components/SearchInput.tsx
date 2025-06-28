@@ -66,7 +66,6 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isFirstRenderRef = useRef(true);
 
-  // Limpa o timer ao desmontar o componente
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) {
@@ -75,40 +74,32 @@ const SearchInput: React.FC<SearchInputProps> = ({
     };
   }, []);
 
-  // Função para executar a busca
   const executeSearch = useCallback((searchQuery: string) => {
     const trimmedQuery = searchQuery.trim();
     
-    // Só executa se o usuário já interagiu e não é o primeiro render
     if (!hasUserInteracted || isFirstRenderRef.current) {
       return;
     }
 
-    // Verifica se deve executar a busca baseado no tamanho mínimo
     if (trimmedQuery.length === 0 || trimmedQuery.length >= minCharacters) {
       onSearch(trimmedQuery);
     }
   }, [hasUserInteracted, minCharacters, onSearch]);
 
-  // Efeito para lidar com mudanças no query com debounce
   useEffect(() => {
-    // Marca que não é mais o primeiro render
     if (isFirstRenderRef.current) {
       isFirstRenderRef.current = false;
       return;
     }
 
-    // Limpa o timer anterior
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Cria novo timer
     debounceTimerRef.current = setTimeout(() => {
       executeSearch(query);
     }, debounceDelay);
 
-    // Cleanup
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
@@ -128,12 +119,10 @@ const SearchInput: React.FC<SearchInputProps> = ({
       setHasUserInteracted(true);
     }
     
-    // Limpa o timer de debounce
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
     
-    // Executa a busca imediatamente
     const trimmedQuery = query.trim();
     if (trimmedQuery.length === 0 || trimmedQuery.length >= minCharacters) {
       onSearch(trimmedQuery);
@@ -145,7 +134,6 @@ const SearchInput: React.FC<SearchInputProps> = ({
       setHasUserInteracted(true);
     }
     
-    // Limpa o timer de debounce
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
