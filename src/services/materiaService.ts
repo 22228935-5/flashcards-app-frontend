@@ -1,5 +1,6 @@
-import api from './api';
 import { Materia, MateriaForm } from '../types';
+
+import api from './api';
 
 export const getMaterias = async (): Promise<Materia[]> => {
   const response = await api.get<Materia[]>('/materias');

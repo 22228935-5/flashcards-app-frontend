@@ -1,17 +1,18 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 
 import SearchInput from '../../../components/SearchInput';
-import { RootStackParamList, Tema } from '../../../types';
 import { SEARCH_CONFIG, MESSAGES, SECTIONS } from '../../../constants/temas';
-import TemaHeader from '../components/TemaHeader';
-import TemaForm from '../components/TemaForm';
-import EmptyState from '../../materias/components/EmptyState';
-import TemaCard from '../components/TemaCard';
-import FABButton from '../components/EmptyState';
+import { RootStackParamList, Tema } from '../../../types';
 import { useTemasData } from '../../../utils/hooks/useTemasData';
+import EmptyState from '../../materias/components/EmptyState';
+import FABButton from '../components/EmptyState';
+import TemaCard from '../components/TemaCard';
+import TemaForm from '../components/TemaForm';
+import TemaHeader from '../components/TemaHeader';
 
 const styles = StyleSheet.create({
   container: {

@@ -1,6 +1,7 @@
-import { materiaService } from './materiaService';
-import { flashcardService } from './flashcardService';
 import { Materia, Tema, Flashcard } from '../types';
+
+import { flashcardService } from './flashcardService';
+import { materiaService } from './materiaService';
 import { temaService } from './temasService';
 
 export const searchService = {

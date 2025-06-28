@@ -1,17 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, ViewStyle, TextStyle, RefreshControl } from 'react-native';
+
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../../types';
+import { View, Text, StyleSheet, ScrollView, ViewStyle, TextStyle, RefreshControl } from 'react-native';
+
 import Button from '../../../components/Button';
-import { useHomeData } from '../../../utils/hooks/useHomeData';
-import ReviewCard from '../components/ReviewCard';
-import StatsCard from '../components/StatsCard';
 import { 
   NAVIGATION_CARDS_CONFIG, 
   MESSAGES, 
   REFRESH_CONFIG 
 } from '../../../constants/home';
+import { RootStackParamList } from '../../../types';
+import { useHomeData } from '../../../utils/hooks/useHomeData';
+import ReviewCard from '../components/ReviewCard';
+import StatsCard from '../components/StatsCard';
 
 const styles = StyleSheet.create<Styles>({
   container: {
@@ -163,7 +165,6 @@ const HomeScreen: React.FC = () => {
 
   const { navigateToMaterias, navigateToDashboard, navigateToTemas, resetToLogin } = useHomeNavigation();
 
-  // Refs para controlar carregamento
   const isLoadingDataRef = useRef(false);
   const hasLoadedInitialDataRef = useRef(false);
   const lastFocusTimeRef = useRef(0);
@@ -191,9 +192,7 @@ const HomeScreen: React.FC = () => {
     }
   }, [refreshAll]);
 
-  // Função centralizada para carregar dados
   const loadHomeData = useCallback(async () => {
-    // Previne múltiplas chamadas simultâneas
     if (isLoadingDataRef.current) {
       console.log('[HomeScreen] Já está carregando dados, ignorando...');
       return;
@@ -203,7 +202,6 @@ const HomeScreen: React.FC = () => {
     console.log('[HomeScreen] Iniciando carregamento de dados...');
 
     try {
-      // Carrega em sequência para evitar race conditions
       await loadStats();
       await loadReviewCounts();
     } catch (error) {
@@ -213,32 +211,27 @@ const HomeScreen: React.FC = () => {
     }
   }, [loadStats, loadReviewCounts]);
 
-  // Carrega o usuário ao montar o componente
   useEffect(() => {
     console.log('[HomeScreen] Componente montado, carregando usuário...');
     loadUser();
-  }, []); // Vazio de propósito - só executa uma vez
+  }, []);
 
-  // Carrega dados quando o usuário estiver disponível
   useEffect(() => {
     if (user && !hasLoadedInitialDataRef.current) {
       console.log('[HomeScreen] Usuário carregado, iniciando carregamento inicial de dados');
       hasLoadedInitialDataRef.current = true;
       loadHomeData();
     }
-  }, [user]); // Só depende do user, não das funções
+  }, [user]);
 
-  // Recarrega dados quando a tela recebe foco (com debounce)
   useFocusEffect(
     useCallback(() => {
-      // Pula se ainda não carregou os dados iniciais
       if (!hasLoadedInitialDataRef.current) {
         return;
       }
 
       const now = Date.now();
       
-      // Atualiza o timestamp do último focus
       if (lastFocusTimeRef.current === 0) {
         lastFocusTimeRef.current = now;
         return;
@@ -246,13 +239,12 @@ const HomeScreen: React.FC = () => {
 
       const timeSinceLastFocus = now - lastFocusTimeRef.current;
       
-      // Só recarrega se passou mais de 30 segundos
       if (timeSinceLastFocus > 30000) {
         console.log(`[HomeScreen] Recarregando dados (${Math.round(timeSinceLastFocus / 1000)}s desde último focus)`);
         lastFocusTimeRef.current = now;
         loadHomeData();
       }
-    }, []) // Vazio de propósito - loadHomeData é estável devido ao useCallback
+    }, [loadHomeData])
   );
 
   return (

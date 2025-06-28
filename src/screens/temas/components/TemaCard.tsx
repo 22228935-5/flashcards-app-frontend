@@ -1,7 +1,9 @@
 import React, { useCallback, useMemo } from 'react';
+
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Tema } from '../../../types';
+
 import { REVIEW_STATUS, TEXT_FORMATTERS } from '../../../constants/temas';
+import { Tema } from '../../../types';
 
 const styles = StyleSheet.create({
   temaCard: {

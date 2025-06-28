@@ -1,5 +1,6 @@
-import api from './api';
 import { Tema, TemaForm } from '../types';
+
+import api from './api';
 
 export const getTemas = async (materiaId: string): Promise<Tema[]> => {
   const response = await api.get<Tema[]>(`/temas/materia/${materiaId}`);

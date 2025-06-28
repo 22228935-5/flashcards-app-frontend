@@ -1,9 +1,11 @@
 
-import { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+
 import { Alert } from 'react-native';
-import { Tema } from '../../types';
+
 import { MESSAGES, EMPTY_STATES } from '../../constants/temas';
 import { temaService } from '../../services/temasService';
+import { Tema } from '../../types';
 
 const useTemas = (materiaId: string) => {
   const [temas, setTemas] = useState<Tema[]>(EMPTY_STATES.temas);

@@ -1,12 +1,14 @@
 {
   "name": "flashcardsapp",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.4",
@@ -28,6 +30,14 @@
     "@babel/core": "7.25.2",
     "@types/react": "19.0.10",
     "@types/react-native-dotenv": "^0.2.2",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "eslint": "^9.30.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-native": "^5.0.0",
+    "globals": "^16.2.0",
     "typescript": "5.8.3"
   },
   "private": true

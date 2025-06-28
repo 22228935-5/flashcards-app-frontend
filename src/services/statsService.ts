@@ -1,6 +1,7 @@
 
+import { DashboardData, GeneralStats, MateriaStats, TemaStats } from '../types';
+
 import api from './api';
-import { GeneralStats, MateriaStats, TemaStats } from '../types';
 
 export const saveStudyResult = async (data: {
   materiaId: string;
@@ -27,7 +28,7 @@ export const getTemaStats = async (temaId: string): Promise<TemaStats> => {
   return response.data;
 };
 
-export const getDashboardStats = async (): Promise<any> => {
+export const getDashboardStats = async (): Promise<DashboardData> => {
   const response = await api.get('/stats/dashboard');
   return response.data;
 };

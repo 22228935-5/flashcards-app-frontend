@@ -1,4 +1,7 @@
 import React, { useCallback, useState, useMemo } from 'react';
+
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   View,
   Text,
@@ -7,18 +10,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  ViewStyle,
-  TextStyle,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
-import { validateEmail, validatePassword, validateName } from '../../../utils/validators/validators';
-import { login, register, storeAuthData, getErrorMessage, debugCurrentToken } from '../../../services/authService';
 import { AUTH_TEXTS } from '../../../constants/auth';
+import { login, register, storeAuthData, getErrorMessage, debugCurrentToken } from '../../../services/authService';
 import { RootStackParamList, LoginForm, RegisterForm } from '../../../types';
+import { validateEmail, validatePassword, validateName } from '../../../utils/validators/validators';
 
 const styles = StyleSheet.create({
   container: {
@@ -54,14 +53,6 @@ interface FormErrors {
   name?: string;
   email?: string;
   password?: string;
-}
-
-interface Styles {
-  container: ViewStyle;
-  scrollContainer: ViewStyle;
-  content: ViewStyle;
-  title: TextStyle;
-  subtitle: TextStyle;
 }
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;

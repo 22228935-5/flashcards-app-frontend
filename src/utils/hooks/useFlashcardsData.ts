@@ -1,8 +1,10 @@
-import { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+
 import { Alert } from 'react-native';
-import { Flashcard } from '../../types';
+
 import { MESSAGES, EMPTY_STATES } from '../../constants/flashcards';
 import { flashcardService } from '../../services/flashcardService';
+import { Flashcard } from '../../types';
 
 const useFlashcards = (temaId: string) => {
   const [flashcards, setFlashcards] = useState<Flashcard[]>(EMPTY_STATES.flashcards);
@@ -192,7 +194,7 @@ const useFlashcardsActions = (
     } finally {
       updateFormState({ saving: false });
     }
-  }, [formState.question, formState.answer, formState.editingFlashcard, updateFormState, resetForm, setFlashcards]);
+  }, [formState.question, formState.answer, formState.editingFlashcard, updateFormState, resetForm, setFlashcards, temaId]);
 
   const handleDeleteFlashcard = useCallback((flashcard: Flashcard) => {
     Alert.alert(

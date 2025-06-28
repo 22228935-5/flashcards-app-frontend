@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+
 import { Alert } from 'react-native';
 
 export const useLoading = (initialState = false) => {

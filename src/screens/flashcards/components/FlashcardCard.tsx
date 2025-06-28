@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useMemo } from 'react';
+
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Flashcard } from '../../../types';
+
 import { FLASHCARD_UI } from '../../../constants/flashcards';
+import { Flashcard } from '../../../types';
 
 const styles = StyleSheet.create({
   flashcardCard: {

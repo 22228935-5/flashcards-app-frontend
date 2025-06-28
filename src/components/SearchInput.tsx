@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
 
 interface SearchInputProps {

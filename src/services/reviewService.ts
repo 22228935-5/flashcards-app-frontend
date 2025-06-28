@@ -1,7 +1,7 @@
-import api from './api';
-import { Materia } from '../types';
-import { temaService } from './temasService';
+import { Materia, Tema } from '../types';
+
 import { materiaService } from './materiaService';
+import { temaService } from './temasService';
 
 interface ReviewCounts {
   totalTemas: number;
@@ -32,7 +32,7 @@ export const getAllMateriasReviewCounts = async (): Promise<ReviewCounts> => {
   return { totalTemas, materiasCounts: filteredCounts };
 };
 
-export const getNextReviewTema = async (): Promise<{ materia: Materia; tema: any } | null> => {
+export const getNextReviewTema = async (): Promise<{ materia: Materia; tema: Tema } | null> => {
   const reviewCounts = await getAllMateriasReviewCounts();
   
   if (reviewCounts.materiasCounts.length === 0) {

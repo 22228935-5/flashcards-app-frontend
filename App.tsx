@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import LoginScreen from './src/screens/login/page/LoginScreen';
-import HomeScreen from './src/screens/home/page/HomeScreen';
-import MateriasScreen from './src/screens/materias/page/MateriasScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
-import { RootStackParamList } from './src/types';
-import TemasScreen from './src/screens/temas/page/TemasScreen';
 import EstudoScreen from './src/screens/estudo/page/EstudoScreen';
 import FlashcardsScreen from './src/screens/flashcards/page/FlashcardsScreen';
+import HomeScreen from './src/screens/home/page/HomeScreen';
+import LoginScreen from './src/screens/login/page/LoginScreen';
+import MateriasScreen from './src/screens/materias/page/MateriasScreen';
+import TemasScreen from './src/screens/temas/page/TemasScreen';
+import { RootStackParamList } from './src/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

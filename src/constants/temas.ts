@@ -89,5 +89,5 @@ export const TEXT_FORMATTERS = {
 };
 
 export const EMPTY_STATES = {
-  temas: [] as any[]
+  temas: []
 };

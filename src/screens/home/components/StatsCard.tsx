@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+
+import { View, Text, StyleSheet } from 'react-native';
+
 import { GeneralStats } from '../../../types';
 
 interface StatsCardProps {

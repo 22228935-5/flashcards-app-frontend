@@ -1,14 +1,15 @@
 import React, { useState, useCallback } from 'react';
+
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   Alert,
-  Dimensions,
   RefreshControl,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+
 import api from '../services/api';
 
 const styles = StyleSheet.create({
@@ -280,7 +281,7 @@ const SimpleBarChart: React.FC<{ data: MateriaStats[] }> = ({ data }) => {
   
   return (
     <View style={styles.simpleChart}>
-      {data.slice(0, 4).map((item, index) => (
+      {data.slice(0, 4).map((item) => (
         <View key={item._id} style={styles.barContainer}>
           <View 
             style={[

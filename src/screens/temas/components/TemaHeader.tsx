@@ -1,5 +1,7 @@
 import React from 'react';
+
 import { View, Text, StyleSheet } from 'react-native';
+
 import { TEXT_FORMATTERS } from '../../../constants/temas';
 
 const styles = StyleSheet.create({

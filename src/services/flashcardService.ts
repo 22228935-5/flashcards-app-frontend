@@ -1,5 +1,6 @@
-import api from './api';
 import { Flashcard, FlashcardForm } from '../types';
+
+import api from './api';
 
 export const getFlashcards = async (temaId: string): Promise<Flashcard[]> => {
   const response = await api.get<Flashcard[]>(`/flashcards/tema/${temaId}`);

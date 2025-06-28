@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from './api';
+
 import { AuthResponse, LoginForm, RegisterForm, User } from '../types';
+
+import api from './api';
 
 export const storeAuthData = async (token: string, user: User): Promise<void> => {
   try {

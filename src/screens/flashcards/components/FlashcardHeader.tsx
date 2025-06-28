@@ -1,5 +1,7 @@
 import React from 'react';
+
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+
 import { TEXT_FORMATTERS, FLASHCARD_UI } from '../../../constants/flashcards';
 
 const styles = StyleSheet.create({

@@ -1,9 +1,11 @@
 import { useState, useCallback, useMemo } from 'react';
+
 import { Alert } from 'react-native';
-import { FlashcardPopulated } from '../../types';
+
 import { MESSAGES, DIFFICULTY_INTERVALS, EMPTY_STATS, STUDY_RESULTS } from '../../constants/estudo';
 import api from '../../services/api';
 import { statsService } from '../../services/statsService';
+import { FlashcardPopulated } from '../../types';
 
 interface UseEstudoDataReturn {
   flashcards: FlashcardPopulated[];

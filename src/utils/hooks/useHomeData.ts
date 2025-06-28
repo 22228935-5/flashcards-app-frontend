@@ -1,11 +1,14 @@
 import { useState, useCallback, useMemo } from 'react';
+
 import { Alert } from 'react-native';
-import { GeneralStats, Materia, User } from '../../types';
-import { useErrorHandler, useLoading } from './useCommon';
-import { clearAuthData, getStoredUser } from '../../services/authService';
-import { getGeneralStats } from '../../services/statsService';
+
 import { MESSAGES, EMPTY_STATES, TEXT_FORMATTERS } from '../../constants/home';
+import { clearAuthData, getStoredUser } from '../../services/authService';
 import { getAllMateriasReviewCounts } from '../../services/reviewService';
+import { getGeneralStats } from '../../services/statsService';
+import { GeneralStats, Materia, User } from '../../types';
+
+import { useErrorHandler, useLoading } from './useCommon';
 
 export interface ReviewCounts {
   totalTemas: number;

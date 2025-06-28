@@ -1,5 +1,7 @@
 import React from 'react';
+
 import { View, Text, StyleSheet } from 'react-native';
+
 import { UI_TEXTS } from '../../../constants/estudo';
 
 const styles = StyleSheet.create({

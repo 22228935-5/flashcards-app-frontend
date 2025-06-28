@@ -3,19 +3,20 @@
 // =====================================
 
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
+
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
 
 import SearchInput from '../../../components/SearchInput';
-import { useFlashcardsData } from '../../../utils/hooks/useFlashcardsData';
-import { RootStackParamList } from '../../../types';
 import { SEARCH_CONFIG, MESSAGES } from '../../../constants/flashcards';
-import FlashcardHeader from '../components/FlashcardHeader';
-import FlashcardForm from '../components/FlashcardForm';
+import { RootStackParamList } from '../../../types';
+import { useFlashcardsData } from '../../../utils/hooks/useFlashcardsData';
 import EmptyState from '../components/EmptyState';
-import FlashcardCard from '../components/FlashcardCard';
 import FABButton from '../components/FABButton';
+import FlashcardCard from '../components/FlashcardCard';
+import FlashcardForm from '../components/FlashcardForm';
+import FlashcardHeader from '../components/FlashcardHeader';
 
 type FlashcardsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Flashcards'>;
 type FlashcardsScreenRouteProp = RouteProp<RootStackParamList, 'Flashcards'>;
@@ -91,6 +92,7 @@ const FlashcardsScreen: React.FC = () => {
 
   useEffect(() => {
     loadFlashcards();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (showLoadingState) {

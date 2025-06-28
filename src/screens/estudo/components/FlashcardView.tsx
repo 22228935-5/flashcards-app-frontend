@@ -1,7 +1,9 @@
 import React from 'react';
+
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { FlashcardPopulated } from '../../../types';
+
 import { UI_TEXTS } from '../../../constants/estudo';
+import { FlashcardPopulated } from '../../../types';
 
 const styles = StyleSheet.create({
   cardContainer: {

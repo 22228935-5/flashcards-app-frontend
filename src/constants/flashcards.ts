@@ -75,5 +75,5 @@ export const TEXT_FORMATTERS = {
 };
 
 export const EMPTY_STATES = {
-  flashcards: [] as any[]
+  flashcards: []
 };

@@ -1,5 +1,7 @@
 import React from 'react';
+
 import { View, Text, StyleSheet } from 'react-native';
+
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
 import { FORM_CONFIG } from '../../../constants/temas';

@@ -1,5 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
+
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+
 import { Materia } from '../../../types';
 
 const styles = StyleSheet.create({

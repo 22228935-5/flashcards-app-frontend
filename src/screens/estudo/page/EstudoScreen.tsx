@@ -1,14 +1,15 @@
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 
-import { useEstudoData } from '../../../utils/hooks/useEstudoData';
-import { RootStackParamList } from '../../../types';
 import { MESSAGES } from '../../../constants/estudo';
-import StudyHeader from '../components/StudyHeader';
+import { RootStackParamList } from '../../../types';
+import { useEstudoData } from '../../../utils/hooks/useEstudoData';
 import FlashcardView from '../components/FlashcardView';
 import StudyActions from '../components/StudyActions';
+import StudyHeader from '../components/StudyHeader';
 
 type EstudoScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Estudo'>;
 type EstudoScreenRouteProp = RouteProp<RootStackParamList, 'Estudo'>;
@@ -56,7 +57,7 @@ const EstudoScreen: React.FC = () => {
         }
       };
       loadData();
-    }, [])
+    }, [loadFlashcards, navigation])
   );
 
   if (loading) {

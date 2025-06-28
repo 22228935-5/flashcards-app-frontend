@@ -1,9 +1,11 @@
-import { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+
 import { Alert } from 'react-native';
-import { Materia } from '../../types';
-import { searchService } from '../../services/searchService';
-import api from '../../services/api';
+
 import { MESSAGES } from '../../constants/materias';
+import api from '../../services/api';
+import { searchService } from '../../services/searchService';
+import { Materia } from '../../types';
 
 const EMPTY_MATERIAS: Materia[] = [];
 
