@@ -7,7 +7,7 @@ import reactNative from 'eslint-plugin-react-native';
 import importPlugin from 'eslint-plugin-import';
 import globals from 'globals';
 
-/** @type {import("eslint").Linter.FlatConfig[]} */
+/** @type {import('eslint').FlatConfigItem[]} */
 export default [
   js.configs.recommended,
   {
