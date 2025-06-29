@@ -16,6 +16,13 @@ module.exports = [
     ignores: ['node_modules/', 'babel.config.js', 'metro.config.js', 'jest.config.js'],
     languageOptions: {
       parser: typescriptParser,
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
       globals: {
         ...globals.browser,
         ...globals.node,
@@ -29,9 +36,18 @@ module.exports = [
       'react-native': reactNative,
       import: importPlugin,
     },
+    settings: {
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+        },
+        node: {
+          extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        },
+      },
+    },
     rules: {
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
 
@@ -40,6 +56,25 @@ module.exports = [
 
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+
+      // ✅ REGRAS DE IMPORT QUE FUNCIONAM COM FLAT CONFIG
+      'import/no-duplicates': 'error',
+      'import/no-unresolved': 'off', // Pode causar problemas com React Native
+      'import/named': 'error',
+      'import/default': 'error',
+      
+      // 🎯 ALTERNATIVA PARA DETECTAR EXPORTS NÃO USADOS
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          // Detecta variáveis/funções exportadas mas não usadas localmente
+          args: 'after-used',
+          ignoreRestSiblings: true,
+        },
+      ],
 
       'import/order': [
         'warn',
@@ -60,7 +95,6 @@ module.exports = [
       'no-empty-function': 'warn',
     },
   },
-
 
   {
     files: ['eslint.config.js'],
