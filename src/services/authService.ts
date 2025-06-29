@@ -67,21 +67,18 @@ export const getErrorMessage = (error: unknown): string => {
   return 'Erro interno do servidor';
 };
 
-// Função para testar o token atual
 export const debugCurrentToken = async (): Promise<void> => {
   try {
     const token = await getStoredToken();
     console.log('🐛 DEBUG - Token completo:', token || 'Nenhum token encontrado');
     
     if (token) {
-      // Verificar formato do token
       console.log('📋 Token info:');
       console.log('  - Tamanho:', token.length);
       console.log('  - Começa com:', token.substring(0, 10));
       console.log('  - Termina com:', token.substring(token.length - 10));
       console.log('  - Tem pontos:', token.split('.').length, 'partes');
       
-      // Testar uma requisição simples
       try {
         const response = await api.get('/materias');
         console.log('✅ Token funciona - materias encontradas:', response.data.length);
@@ -89,7 +86,6 @@ export const debugCurrentToken = async (): Promise<void> => {
         console.log('❌ Token não funciona - Status:', error.status);
         console.log('❌ Mensagem:', error.message);
         
-        // Tentar requisição manual
         console.log('🧪 Testando requisição manual...');
         try {
           const manualResponse = await fetch('http://sua-api-url/materias', {

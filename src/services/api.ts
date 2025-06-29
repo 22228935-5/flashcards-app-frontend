@@ -50,7 +50,6 @@ class AsyncTokenStorage implements TokenStorage {
   }
 }
 
-// Logger Implementation - Single Responsibility
 class ConsoleLogger implements Logger {
   logSuccess(url: string, status: number): void {
     console.log(`✅ API Response: ${url} ${status}`);
@@ -61,7 +60,6 @@ class ConsoleLogger implements Logger {
   }
 }
 
-// Request Interceptor - Single Responsibility
 class AuthInterceptor {
   constructor(private readonly tokenStorage: TokenStorage) {}
 
@@ -146,7 +144,6 @@ class ResponseInterceptor {
   }
 }
 
-// Configuration Factory - Single Responsibility
 class ApiConfigFactory {
   static create(): ApiConfig {
     return {

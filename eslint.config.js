@@ -1,15 +1,16 @@
-import js from '@eslint/js';
-import typescriptPlugin from '@typescript-eslint/eslint-plugin';
-import typescriptParser from '@typescript-eslint/parser';
-import react from 'eslint-plugin-react';
-import reactHooks from 'eslint-plugin-react-hooks';
-import reactNative from 'eslint-plugin-react-native';
-import importPlugin from 'eslint-plugin-import';
-import globals from 'globals';
+const js = require('@eslint/js');
+const typescriptPlugin = require('@typescript-eslint/eslint-plugin');
+const typescriptParser = require('@typescript-eslint/parser');
+const react = require('eslint-plugin-react');
+const reactHooks = require('eslint-plugin-react-hooks');
+const reactNative = require('eslint-plugin-react-native');
+const importPlugin = require('eslint-plugin-import');
+const globals = require('globals');
 
-/** @type {import('eslint').FlatConfigItem[]} */
-export default [
+/** @type {import('eslint').Linter.FlatConfig[]} */
+module.exports = [
   js.configs.recommended,
+
   {
     files: ['**/*.ts', '**/*.tsx'],
     ignores: ['node_modules/', 'babel.config.js', 'metro.config.js', 'jest.config.js'],
@@ -30,7 +31,6 @@ export default [
     },
     rules: {
       'no-unused-vars': 'off',
-
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
@@ -45,19 +45,10 @@ export default [
         'warn',
         {
           groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-          pathGroups: [
-            {
-              pattern: 'react',
-              group: 'external',
-              position: 'before',
-            },
-          ],
+          pathGroups: [{ pattern: 'react', group: 'external', position: 'before' }],
           pathGroupsExcludedImportTypes: ['react'],
           'newlines-between': 'always',
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
+          alphabetize: { order: 'asc', caseInsensitive: true },
         },
       ],
 
@@ -67,6 +58,19 @@ export default [
 
       'no-console': 'off',
       'no-empty-function': 'warn',
+    },
+  },
+
+
+  {
+    files: ['eslint.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        module: 'writable',
+        require: 'readonly',
+        exports: 'writable',
+      },
     },
   },
 ];

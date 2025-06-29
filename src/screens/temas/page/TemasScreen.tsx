@@ -43,9 +43,6 @@ const styles = StyleSheet.create({
 type TemasScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Temas'>;
 type TemasScreenRouteProp = RouteProp<RootStackParamList, 'Temas'>;
 
-// =====================================
-// 🚀 HOOK DE NAVEGAÇÃO
-// =====================================
 const useTemasNavigation = () => {
   const navigation = useNavigation<TemasScreenNavigationProp>();
 
@@ -66,9 +63,6 @@ const useTemasNavigation = () => {
   return { openFlashcards, startStudy };
 };
 
-// =====================================
-// 🎨 COMPONENTE PRINCIPAL
-// =====================================
 const TemasScreen: React.FC = () => {
   const route = useRoute<TemasScreenRouteProp>();
   const { materiaId, materiaName } = route.params;
@@ -98,9 +92,6 @@ const TemasScreen: React.FC = () => {
 
   const { openFlashcards, startStudy } = useTemasNavigation();
 
-  // =====================================
-  // 📱 VALORES COMPUTADOS
-  // =====================================
   const refreshControl = useMemo(() => (
     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
   ), [refreshing, onRefresh]);
@@ -120,18 +111,12 @@ const TemasScreen: React.FC = () => {
     [currentSearchQuery, hasTemas]
   );
 
-  // =====================================
-  // 🔄 EFEITOS
-  // =====================================
   useFocusEffect(
     useCallback(() => {
       loadTemas();
-    }, []) // Array vazio como discutimos
+    }, [])
   );
 
-  // =====================================
-  // 🎯 RENDER CONDICIONAL DE LOADING
-  // =====================================
   if (showLoadingState) {
     return (
       <View style={styles.loadingContainer}>

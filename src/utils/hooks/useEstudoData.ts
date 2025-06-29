@@ -31,22 +31,17 @@ interface StudyStats {
   skipped: number;
 }
 
-// =====================================
-// 🎯 HOOK PRINCIPAL - useEstudoData
-// =====================================
 export const useEstudoData = (
   temaId: string,
   temaName: string,
   onStudyComplete: () => void
 ): UseEstudoDataReturn => {
-  // ✅ ESTADOS PRINCIPAIS
   const [flashcards, setFlashcards] = useState<FlashcardPopulated[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [loading, setLoading] = useState(true);
   const [studyStats, setStudyStats] = useState<StudyStats>(EMPTY_STATS);
 
-  // ✅ COMPUTADAS
   const currentFlashcard = useMemo(() => {
     return flashcards[currentIndex];
   }, [flashcards, currentIndex]);
@@ -66,7 +61,6 @@ export const useEstudoData = (
     return Math.round((studyStats.correct / total) * 100);
   }, [studyStats]);
 
-  // ✅ CARREGAR FLASHCARDS (igual ao original)
   const loadFlashcards = useCallback(async () => {
     setLoading(true);
     try {
@@ -92,12 +86,10 @@ export const useEstudoData = (
     }
   }, [temaId, onStudyComplete]);
 
-  // ✅ MOSTRAR RESPOSTA
   const handleShowAnswer = useCallback(() => {
     setShowAnswer(true);
   }, []);
 
-  // ✅ MARCAR TEMA COMO REVISADO (igual ao original)
   const markThemeAsReviewed = useCallback(async (
     difficulty: 'facil' | 'medio' | 'dificil', 
     finalStats: StudyStats
@@ -136,7 +128,6 @@ export const useEstudoData = (
     }
   }, [temaId, flashcards.length, onStudyComplete]);
 
-  // ✅ PRÓXIMO FLASHCARD (igual ao original)
   const nextFlashcard = useCallback((finalStats?: StudyStats) => {
     if (currentIndex < flashcards.length - 1) {
       setCurrentIndex(prev => prev + 1);
@@ -177,7 +168,6 @@ export const useEstudoData = (
     }
   }, [currentIndex, flashcards, studyStats, markThemeAsReviewed]);
 
-  // ✅ MARCAR COMO CORRETO (igual ao original)
   const markCorrect = useCallback(async () => {
     const newStats = { ...studyStats, correct: studyStats.correct + 1 };
     setStudyStats(newStats);
@@ -200,7 +190,6 @@ export const useEstudoData = (
     }
   }, [studyStats, currentIndex, flashcards.length, nextFlashcard, currentFlashcard]);
 
-  // ✅ MARCAR COMO INCORRETO (igual ao original)
   const markIncorrect = useCallback(async () => {
     const newStats = { ...studyStats, incorrect: studyStats.incorrect + 1 };
     setStudyStats(newStats);
@@ -223,7 +212,6 @@ export const useEstudoData = (
     }
   }, [studyStats, currentIndex, flashcards.length, nextFlashcard, currentFlashcard]);
 
-  // ✅ PULAR CARD (igual ao original)
   const skipCard = useCallback(async () => {
     const newStats = { ...studyStats, skipped: studyStats.skipped + 1 };
     setStudyStats(newStats);
@@ -246,7 +234,6 @@ export const useEstudoData = (
     }
   }, [studyStats, currentIndex, flashcards.length, nextFlashcard, currentFlashcard]);
 
-  // ✅ REINICIAR ESTUDO (igual ao original)
   const restartStudy = useCallback(() => {
     Alert.alert(
       MESSAGES.alerts.restartStudy.title,
@@ -267,7 +254,6 @@ export const useEstudoData = (
     );
   }, [flashcards]);
 
-  // ✅ Apenas o retorno foi alterado aqui:
   return {
     flashcards,
     currentIndex,
@@ -279,10 +265,11 @@ export const useEstudoData = (
     totalAnswered,
     finalScore,
     loadFlashcards,
-    showAnswerAction: handleShowAnswer,  // <-- alteração: renomeamos handleShowAnswer no retorno
+    showAnswerAction: handleShowAnswer,
     markCorrect,
     markIncorrect,
     skipCard,
     restartStudy
   };
 };
+
